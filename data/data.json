@@ -17,6 +17,86 @@
   },
   "projects": [
     {
+      "id": "real-time-news-analysis-and-alert-platform",
+      "slug": "real-time-news-analysis-and-alert-platform",
+      "title": "Real-Time News Analysis and Alert Platform",
+      "summary": "Event-driven news pipeline that enriches articles with LLM insights, deduplicates content, and sends personalized alerts in near real time.",
+      "tags": ["microservices", "kafka", "llm", "news-analytics", "redis", "postgresql", "nextjs", "docker"],
+      "techStack": [
+        "Python",
+        "Go",
+        "TypeScript",
+        "Next.js",
+        "PostgreSQL",
+        "Redis",
+        "Kafka",
+        "Docker",
+        "AWS",
+        "ECS",
+        "pgvector"
+      ],
+      "links": {
+        "repo": "https://github.com/Nihar4/Real-Time-News-Analysis-and-Alert-Platform"
+      },
+      "highlights": [
+        "Built Python LLM enrichment pipeline with semantic deduplication and dynamic topic clustering using pgvector, reducing LLM API calls by 60% while processing 10K+ daily articles.",
+        "Developed Go notification microservice with Redis caching and topic-based clustering, matching user preferences and reducing duplicate alerts by 70% with sub-2-minute latency.",
+        "Designed event-driven microservices architecture with Kafka stream processing, PostgreSQL, and Next.js frontend, containerized with Docker and deployed on AWS ECS."
+      ],
+      "metrics": {
+        "articlesPerDay": 10000,
+        "llmCallReductionPercent": 60,
+        "duplicateAlertReductionPercent": 70,
+        "alertLatencyMinutes": 2
+      },
+      "details": "A streaming platform that ingests news, enriches it with AI, deduplicates similar items, and triggers user alerts based on preferences."
+    },
+
+     {
+      "id": "distributed-job-orchestration-platform",
+      "slug": "distributed-job-orchestration-platform",
+      "title": "Distributed Job Orchestration Platform",
+      "summary": "Fault-tolerant job orchestrator with a Java control plane, Go worker agents, and Etcd-backed coordination for scheduling containerized workloads.",
+      "tags": [
+        "distributed-systems",
+        "orchestration",
+        "grpc",
+        "etcd",
+        "observability",
+        "prometheus",
+        "grafana",
+        "terraform",
+        "kubernetes"
+      ],
+      "techStack": [
+        "Java",
+        "Go",
+        "Spring Boot",
+        "Etcd",
+        "gRPC",
+        "Protocol Buffers",
+        "Docker",
+        "Kubernetes",
+        "Terraform",
+        "Prometheus",
+        "Grafana",
+        "Linux cgroups"
+      ],
+      "links": {
+        "repo": "https://github.com/Nihar4/Distributed-Job-Orchestration-Platform"
+      },
+      "highlights": [
+        "Built fault-tolerant Java control plane with Etcd consensus and consistent hashing, scheduling 10,000+ jobs across dynamic nodes and maintaining availability during network partitions.",
+        "Implemented Go worker agents using Linux cgroups to isolate resources and run containers securely in production.",
+        "Shipped Prometheus metrics and Grafana dashboards for real-time health, utilization, and alerting globally at scale."
+      ],
+      "metrics": {
+        "jobsScheduled": 10000
+      },
+      "details": "A distributed orchestration system that schedules and runs containerized jobs across worker nodes. It coordinates cluster state centrally while keeping execution lightweight at the edge."
+    },
+
+    {
       "id": "coursebundler",
       "slug": "coursebundler",
       "title": "CourseBundler",
@@ -63,49 +143,7 @@
       ],
       "details": "A full-stack online learning platform deployed on AWS. Backend runs on ECS Fargate with MongoDB and Redis caching, frontend is React, and infra is managed using Terraform."
     },
-    {
-      "id": "distributed-job-orchestration-platform",
-      "slug": "distributed-job-orchestration-platform",
-      "title": "Distributed Job Orchestration Platform",
-      "summary": "Fault-tolerant job orchestrator with a Java control plane, Go worker agents, and Etcd-backed coordination for scheduling containerized workloads.",
-      "tags": [
-        "distributed-systems",
-        "orchestration",
-        "grpc",
-        "etcd",
-        "observability",
-        "prometheus",
-        "grafana",
-        "terraform",
-        "kubernetes"
-      ],
-      "techStack": [
-        "Java",
-        "Go",
-        "Spring Boot",
-        "Etcd",
-        "gRPC",
-        "Protocol Buffers",
-        "Docker",
-        "Kubernetes",
-        "Terraform",
-        "Prometheus",
-        "Grafana",
-        "Linux cgroups"
-      ],
-      "links": {
-        "repo": "https://github.com/Nihar4/Distributed-Job-Orchestration-Platform"
-      },
-      "highlights": [
-        "Built fault-tolerant Java control plane with Etcd consensus and consistent hashing, scheduling 10,000+ jobs across dynamic nodes and maintaining availability during network partitions.",
-        "Implemented Go worker agents using Linux cgroups to isolate resources and run containers securely in production.",
-        "Shipped Prometheus metrics and Grafana dashboards for real-time health, utilization, and alerting globally at scale."
-      ],
-      "metrics": {
-        "jobsScheduled": 10000
-      },
-      "details": "A distributed orchestration system that schedules and runs containerized jobs across worker nodes. It coordinates cluster state centrally while keeping execution lightweight at the edge."
-    },
+   
     {
       "id": "license-plate-detector",
       "slug": "license-plate-detector",
@@ -168,41 +206,7 @@
       ],
       "details": "A React Native mobile portfolio app with a structured UI architecture and centralized state. It is supported by a Node.js backend API with conventional layering for maintainability."
     },
-    {
-      "id": "real-time-news-analysis-and-alert-platform",
-      "slug": "real-time-news-analysis-and-alert-platform",
-      "title": "Real-Time News Analysis and Alert Platform",
-      "summary": "Event-driven news pipeline that enriches articles with LLM insights, deduplicates content, and sends personalized alerts in near real time.",
-      "tags": ["microservices", "kafka", "llm", "news-analytics", "redis", "postgresql", "nextjs", "docker"],
-      "techStack": [
-        "Python",
-        "Go",
-        "TypeScript",
-        "Next.js",
-        "PostgreSQL",
-        "Redis",
-        "Kafka",
-        "Docker",
-        "AWS",
-        "ECS",
-        "pgvector"
-      ],
-      "links": {
-        "repo": "https://github.com/Nihar4/Real-Time-News-Analysis-and-Alert-Platform"
-      },
-      "highlights": [
-        "Built Python LLM enrichment pipeline with semantic deduplication and dynamic topic clustering using pgvector, reducing LLM API calls by 60% while processing 10K+ daily articles.",
-        "Developed Go notification microservice with Redis caching and topic-based clustering, matching user preferences and reducing duplicate alerts by 70% with sub-2-minute latency.",
-        "Designed event-driven microservices architecture with Kafka stream processing, PostgreSQL, and Next.js frontend, containerized with Docker and deployed on AWS ECS."
-      ],
-      "metrics": {
-        "articlesPerDay": 10000,
-        "llmCallReductionPercent": 60,
-        "duplicateAlertReductionPercent": 70,
-        "alertLatencyMinutes": 2
-      },
-      "details": "A streaming platform that ingests news, enriches it with AI, deduplicates similar items, and triggers user alerts based on preferences."
-    },
+    
     {
       "id": "realtime-stock-watchlist-android",
       "slug": "realtime-stock-watchlist-android",
@@ -222,47 +226,7 @@
     }
   ],
   "experience": [
-    {
-      "id": "flourish-creations-intern-2023",
-      "company": "Flourish Creations",
-      "role": "Software Engineer Intern",
-      "location": "Ahmedabad, India",
-      "date": { "start": "2023-05-01", "end": "2023-07-31" },
-      "summary": "Improved throughput and reliability of Kafka-based C++ pipelines with monitoring, profiling, and performance fixes.",
-      "tags": ["cpp", "kafka", "data-pipeline", "performance", "observability", "prometheus", "grafana"],
-      "techStack": ["C++", "Kafka", "Prometheus", "Grafana"],
-      "highlights": [
-        "Sustained 50K+ events per second ingestion from Kafka.",
-        "Reduced incident detection time by 70% with Prometheus and Grafana monitoring.",
-        "Improved batch throughput by 3x via multithreading and memory pooling."
-      ],
-      "metrics": {
-        "eventsPerSecond": 50000,
-        "incidentDetectionReductionPercent": 70,
-        "batchThroughputMultiplier": 3
-      }
-    },
-    {
-      "id": "greatbear-intern-2024",
-      "company": "GreatBear",
-      "role": "Software Engineer Intern",
-      "location": "Ahmedabad, India",
-      "date": { "start": "2024-01-01", "end": "2024-06-30" },
-      "summary": "Built low latency order execution services, secured APIs, and automated daily financial data ingestion.",
-      "tags": ["backend", "golang", "redis", "jwt", "java", "spring-boot", "microservices", "realtime"],
-      "techStack": ["Go", "Java", "Spring Boot", "SQL", "Redis", "JWT", "WebSockets"],
-      "highlights": [
-        "Cut order execution latency by 80% with a Go worker model using Redis queues.",
-        "Secured 220+ API endpoints with JWT-based multi-role access control.",
-        "Synced 10,000+ NAV records daily via automated ingestion."
-      ],
-      "metrics": {
-        "latencyReductionPercent": 80,
-        "securedEndpoints": 220,
-        "navRecordsPerDay": 10000
-      }
-    },
-    {
+     {
       "id": "greatbear-swe-2024-2025",
       "company": "GreatBear",
       "role": "Software Engineer",
@@ -304,7 +268,49 @@
         "deploymentTimeReductionPercent": 60,
         "monteCarloIterationsPerRun": 1000000
       }
+    },
+    {
+      "id": "greatbear-intern-2024",
+      "company": "GreatBear",
+      "role": "Software Engineer Intern",
+      "location": "Ahmedabad, India",
+      "date": { "start": "2024-01-01", "end": "2024-06-30" },
+      "summary": "Built low latency order execution services, secured APIs, and automated daily financial data ingestion.",
+      "tags": ["backend", "golang", "redis", "jwt", "java", "spring-boot", "microservices", "realtime"],
+      "techStack": ["Go", "Java", "Spring Boot", "SQL", "Redis", "JWT", "WebSockets"],
+      "highlights": [
+        "Cut order execution latency by 80% with a Go worker model using Redis queues.",
+        "Secured 220+ API endpoints with JWT-based multi-role access control.",
+        "Synced 10,000+ NAV records daily via automated ingestion."
+      ],
+      "metrics": {
+        "latencyReductionPercent": 80,
+        "securedEndpoints": 220,
+        "navRecordsPerDay": 10000
+      }
+    },
+    {
+      "id": "flourish-creations-intern-2023",
+      "company": "Flourish Creations",
+      "role": "Software Engineer Intern",
+      "location": "Ahmedabad, India",
+      "date": { "start": "2023-05-01", "end": "2023-07-31" },
+      "summary": "Improved throughput and reliability of Kafka-based C++ pipelines with monitoring, profiling, and performance fixes.",
+      "tags": ["cpp", "kafka", "data-pipeline", "performance", "observability", "prometheus", "grafana"],
+      "techStack": ["C++", "Kafka", "Prometheus", "Grafana"],
+      "highlights": [
+        "Sustained 50K+ events per second ingestion from Kafka.",
+        "Reduced incident detection time by 70% with Prometheus and Grafana monitoring.",
+        "Improved batch throughput by 3x via multithreading and memory pooling."
+      ],
+      "metrics": {
+        "eventsPerSecond": 50000,
+        "incidentDetectionReductionPercent": 70,
+        "batchThroughputMultiplier": 3
+      }
     }
+    
+   
   ],
   "skills": {
     "languages": ["C++", "Java", "Go", "Python", "JavaScript", "TypeScript", "SQL", "Kotlin", "HCL"],

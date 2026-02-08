@@ -6,6 +6,9 @@ substitutions:
   _NVIDIA_SECRET: NVIDIA_API_KEY
   _CHAT_MODEL: mistralai/devstral-2-123b-instruct-2512
 
+options:
+  logging: CLOUD_LOGGING_ONLY
+
 steps:
   - name: "gcr.io/cloud-builders/docker"
     args:

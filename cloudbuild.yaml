@@ -1,0 +1,42 @@
+substitutions:
+  _REGION: us-central1
+  _REPO: portfolio-repo
+  _IMAGE: portfolio
+  _SERVICE: portfolio
+  _NVIDIA_SECRET: NVIDIA_API_KEY
+  _CHAT_MODEL: mistralai/devstral-2-123b-instruct-2512
+
+steps:
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      - "build"
+      - "-t"
+      - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE}:$BUILD_ID"
+      - "."
+
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      - "push"
+      - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE}:$BUILD_ID"
+
+  - name: "gcr.io/cloud-builders/gcloud"
+    args:
+      - "run"
+      - "deploy"
+      - "${_SERVICE}"
+      - "--image"
+      - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE}:$BUILD_ID"
+      - "--region"
+      - "${_REGION}"
+      - "--platform"
+      - "managed"
+      - "--allow-unauthenticated"
+      - "--port"
+      - "3000"
+      - "--set-secrets"
+      - "NVIDIA_API_KEY=${_NVIDIA_SECRET}:latest"
+      - "--set-env-vars"
+      - "CHAT_MODEL=${_CHAT_MODEL}"
+
+images:
+  - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE}:$BUILD_ID"

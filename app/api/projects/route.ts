@@ -1,0 +1,18 @@
+import fs from "fs";
+import path from "path";
+import { NextResponse } from "next/server";
+
+export async function GET() {
+    try {
+        const filePath = path.join(process.cwd(), "data", "data.json");
+        if (!fs.existsSync(filePath)) {
+            return NextResponse.json({ error: "data.json not found" }, { status: 500 });
+        }
+        const raw = fs.readFileSync(filePath, "utf-8");
+        const parsed = JSON.parse(raw);
+        return NextResponse.json(parsed);
+    } catch (error) {
+        console.error("Error loading projects:", error);
+        return NextResponse.json({ error: "Failed to load projects" }, { status: 500 });
+    }
+}

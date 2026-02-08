@@ -1,0 +1,396 @@
+{
+  "generatedAt": "2026-02-07T12:47:01.028Z",
+  "schemaVersion": "1.0.1",
+  "profile": {
+    "id": "nihar-patel",
+    "name": "Nihar Patel",
+    "headline": "Software engineer focused on distributed systems, cloud platforms, and full-stack delivery.",
+    "location": "San Jose, CA",
+    "status": "Team matching for 2026 internships",
+    "phone": "+1 (408) 207-5620",
+    "email": "niharpatel718@gmail.com",
+    "links": {
+      "linkedin": "https://www.linkedin.com/in/niharpatel4",
+      "github": "https://github.com/Nihar4",
+      "resumePdf": "/resume.pdf"
+    },
+    "bio": "I build scalable backend systems, data pipelines, and developer facing platforms with a focus on reliability, performance, and clean interfaces. My recent work spans distributed systems (Go, Java, C++), cloud platforms (GCP and AWS), and full-stack product delivery with React and Next.js."
+  },
+  "projects": [
+    {
+      "id": "coursebundler",
+      "slug": "coursebundler",
+      "title": "CourseBundler",
+      "summary": "Full-stack online learning platform deployed on AWS with a Node.js and Express backend, MongoDB plus Redis caching, React frontend, and Terraform-managed infrastructure on ECS Fargate.",
+      "tags": [
+        "aws",
+        "ecs-fargate",
+        "terraform",
+        "nodejs",
+        "express",
+        "react",
+        "mongodb",
+        "redis",
+        "docker",
+        "cloudfront",
+        "s3",
+        "alb"
+      ],
+      "techStack": [
+        "JavaScript",
+        "HCL",
+        "Node.js",
+        "Express",
+        "React",
+        "MongoDB",
+        "Redis",
+        "Docker",
+        "Terraform",
+        "AWS",
+        "ECS Fargate",
+        "ECR",
+        "S3",
+        "CloudFront",
+        "ALB",
+        "CloudWatch"
+      ],
+      "links": {
+        "repo": "https://github.com/Nihar4/CMPE_281_Final_Project"
+      },
+      "highlights": [
+        "Deployed a full-stack learning platform on AWS using ECS Fargate with Terraform-managed infrastructure.",
+        "Backend uses Node.js and Express with MongoDB and Redis caching. Frontend is React.",
+        "Production-style deployment workflow with ALB routing, CloudFront, and S3 hosting."
+      ],
+      "details": "A full-stack online learning platform deployed on AWS. Backend runs on ECS Fargate with MongoDB and Redis caching, frontend is React, and infra is managed using Terraform."
+    },
+    {
+      "id": "distributed-job-orchestration-platform",
+      "slug": "distributed-job-orchestration-platform",
+      "title": "Distributed Job Orchestration Platform",
+      "summary": "Fault-tolerant job orchestrator with a Java control plane, Go worker agents, and Etcd-backed coordination for scheduling containerized workloads.",
+      "tags": [
+        "distributed-systems",
+        "orchestration",
+        "grpc",
+        "etcd",
+        "observability",
+        "prometheus",
+        "grafana",
+        "terraform",
+        "kubernetes"
+      ],
+      "techStack": [
+        "Java",
+        "Go",
+        "Spring Boot",
+        "Etcd",
+        "gRPC",
+        "Protocol Buffers",
+        "Docker",
+        "Kubernetes",
+        "Terraform",
+        "Prometheus",
+        "Grafana",
+        "Linux cgroups"
+      ],
+      "links": {
+        "repo": "https://github.com/Nihar4/Distributed-Job-Orchestration-Platform"
+      },
+      "highlights": [
+        "Built fault-tolerant Java control plane with Etcd consensus and consistent hashing, scheduling 10,000+ jobs across dynamic nodes and maintaining availability during network partitions.",
+        "Implemented Go worker agents using Linux cgroups to isolate resources and run containers securely in production.",
+        "Shipped Prometheus metrics and Grafana dashboards for real-time health, utilization, and alerting globally at scale."
+      ],
+      "metrics": {
+        "jobsScheduled": 10000
+      },
+      "details": "A distributed orchestration system that schedules and runs containerized jobs across worker nodes. It coordinates cluster state centrally while keeping execution lightweight at the edge."
+    },
+    {
+      "id": "license-plate-detector",
+      "slug": "license-plate-detector",
+      "title": "License Plate Detector",
+      "summary": "Computer vision workflow for training and running a license plate detector using a notebook-driven pipeline.",
+      "tags": ["computer-vision", "object-detection", "python", "jupyter"],
+      "techStack": ["Python", "Jupyter"],
+      "links": {
+        "repo": "https://github.com/Nihar4/License_Plate_Detector"
+      },
+      "highlights": [
+        "Notebook-based workflow that guides setup, training, and inference for license plate detection.",
+        "Clear separation between dataset preparation, model steps, and inference usage.",
+        "Designed to be adaptable to different datasets and detection targets."
+      ],
+      "details": "A notebook-driven computer vision project that focuses on detecting license plates from images using a repeatable training and inference workflow."
+    },
+    {
+      "id": "mental-health-treatment-prediction",
+      "slug": "mental-health-treatment-prediction",
+      "title": "Mental Health Treatment Prediction",
+      "summary": "Machine learning project that predicts likelihood of seeking mental health treatment using survey data and classification models.",
+      "tags": ["machine-learning", "classification", "data-science", "python", "jupyter"],
+      "techStack": ["Python", "Jupyter", "scikit-learn"],
+      "links": {
+        "repo": "https://github.com/Nihar4/Mental-Health-Treatment-Prediction"
+      },
+      "highlights": [
+        "End-to-end ML workflow including preprocessing, feature encoding, and model evaluation.",
+        "Notebook-based experimentation with reproducible results and documented findings.",
+        "Packaged results for easy sharing alongside the code."
+      ],
+      "details": "A supervised learning workflow that predicts whether an individual is likely to seek mental health treatment based on survey responses."
+    },
+    {
+      "id": "portfoliox-mobile-app",
+      "slug": "portfoliox-mobile-app",
+      "title": "PortfolioX (Mobile App)",
+      "summary": "React Native portfolio app with modular navigation and screens, backed by a Node.js API structured with routes, controllers, models, and middleware.",
+      "tags": [
+        "react-native",
+        "mobile",
+        "javascript",
+        "typescript",
+        "nodejs",
+        "api",
+        "redux",
+        "navigation",
+        "vercel"
+      ],
+      "techStack": ["JavaScript", "TypeScript", "React Native", "Node.js", "Redux", "Vercel"],
+      "links": {
+        "repo": "https://github.com/Nihar4/PortfolioX-frontend",
+        "backendRepo": "https://github.com/Nihar4/PortfolioX-Backend"
+      },
+      "highlights": [
+        "React Native app organized into screens, navigation, redux, styles, and utilities.",
+        "Backend API organized into controllers, routes, models, and middleware for clean separation.",
+        "Deployment-ready backend configuration included, plus a hosted endpoint link on the repo."
+      ],
+      "details": "A React Native mobile portfolio app with a structured UI architecture and centralized state. It is supported by a Node.js backend API with conventional layering for maintainability."
+    },
+    {
+      "id": "real-time-news-analysis-and-alert-platform",
+      "slug": "real-time-news-analysis-and-alert-platform",
+      "title": "Real-Time News Analysis and Alert Platform",
+      "summary": "Event-driven news pipeline that enriches articles with LLM insights, deduplicates content, and sends personalized alerts in near real time.",
+      "tags": ["microservices", "kafka", "llm", "news-analytics", "redis", "postgresql", "nextjs", "docker"],
+      "techStack": [
+        "Python",
+        "Go",
+        "TypeScript",
+        "Next.js",
+        "PostgreSQL",
+        "Redis",
+        "Kafka",
+        "Docker",
+        "AWS",
+        "ECS",
+        "pgvector"
+      ],
+      "links": {
+        "repo": "https://github.com/Nihar4/Real-Time-News-Analysis-and-Alert-Platform"
+      },
+      "highlights": [
+        "Built Python LLM enrichment pipeline with semantic deduplication and dynamic topic clustering using pgvector, reducing LLM API calls by 60% while processing 10K+ daily articles.",
+        "Developed Go notification microservice with Redis caching and topic-based clustering, matching user preferences and reducing duplicate alerts by 70% with sub-2-minute latency.",
+        "Designed event-driven microservices architecture with Kafka stream processing, PostgreSQL, and Next.js frontend, containerized with Docker and deployed on AWS ECS."
+      ],
+      "metrics": {
+        "articlesPerDay": 10000,
+        "llmCallReductionPercent": 60,
+        "duplicateAlertReductionPercent": 70,
+        "alertLatencyMinutes": 2
+      },
+      "details": "A streaming platform that ingests news, enriches it with AI, deduplicates similar items, and triggers user alerts based on preferences."
+    },
+    {
+      "id": "realtime-stock-watchlist-android",
+      "slug": "realtime-stock-watchlist-android",
+      "title": "Realtime Stock Watchlist (Android)",
+      "summary": "Android watchlist app with real-time quotes, persistent storage, and a clean MVVM architecture.",
+      "tags": ["android", "kotlin", "mvvm", "retrofit", "room", "realtime"],
+      "techStack": ["Kotlin", "Jetpack Compose", "Room", "MVVM"],
+      "links": {
+        "repo": "https://github.com/Nihar4/Realtime-Watchlist-Android-App"
+      },
+      "highlights": [
+        "Real-time watchlist with quote updates and responsive UI flows.",
+        "Offline persistence for watchlist data using a local database.",
+        "Layered app design with clear separation between UI, domain, and data."
+      ],
+      "details": "An Android app for tracking stocks with real-time quotes and a persistent watchlist. Built to stay responsive and usable with local caching."
+    }
+  ],
+  "experience": [
+    {
+      "id": "flourish-creations-intern-2023",
+      "company": "Flourish Creations",
+      "role": "Software Engineer Intern",
+      "location": "Ahmedabad, India",
+      "date": { "start": "2023-05-01", "end": "2023-07-31" },
+      "summary": "Improved throughput and reliability of Kafka-based C++ pipelines with monitoring, profiling, and performance fixes.",
+      "tags": ["cpp", "kafka", "data-pipeline", "performance", "observability", "prometheus", "grafana"],
+      "techStack": ["C++", "Kafka", "Prometheus", "Grafana"],
+      "highlights": [
+        "Sustained 50K+ events per second ingestion from Kafka.",
+        "Reduced incident detection time by 70% with Prometheus and Grafana monitoring.",
+        "Improved batch throughput by 3x via multithreading and memory pooling."
+      ],
+      "metrics": {
+        "eventsPerSecond": 50000,
+        "incidentDetectionReductionPercent": 70,
+        "batchThroughputMultiplier": 3
+      }
+    },
+    {
+      "id": "greatbear-intern-2024",
+      "company": "GreatBear",
+      "role": "Software Engineer Intern",
+      "location": "Ahmedabad, India",
+      "date": { "start": "2024-01-01", "end": "2024-06-30" },
+      "summary": "Built low latency order execution services, secured APIs, and automated daily financial data ingestion.",
+      "tags": ["backend", "golang", "redis", "jwt", "java", "spring-boot", "microservices", "realtime"],
+      "techStack": ["Go", "Java", "Spring Boot", "SQL", "Redis", "JWT", "WebSockets"],
+      "highlights": [
+        "Cut order execution latency by 80% with a Go worker model using Redis queues.",
+        "Secured 220+ API endpoints with JWT-based multi-role access control.",
+        "Synced 10,000+ NAV records daily via automated ingestion."
+      ],
+      "metrics": {
+        "latencyReductionPercent": 80,
+        "securedEndpoints": 220,
+        "navRecordsPerDay": 10000
+      }
+    },
+    {
+      "id": "greatbear-swe-2024-2025",
+      "company": "GreatBear",
+      "role": "Software Engineer",
+      "location": "Ahmedabad, India",
+      "date": { "start": "2024-07-01", "end": "2025-06-30" },
+      "summary": "Built and operated distributed investment platform services on GCP, improving deployment speed and reducing infrastructure cost.",
+      "tags": ["distributed-systems", "gcp", "microservices", "graphql", "cloud-pubsub", "terraform", "kubernetes", "observability"],
+      "techStack": [
+        "Java",
+        "C++",
+        "Go",
+        "TypeScript",
+        "SQL",
+        "Spring Boot",
+        "React",
+        "MySQL",
+        "GraphQL",
+        "Docker",
+        "Kubernetes",
+        "GCP",
+        "GKE",
+        "Cloud Pub/Sub",
+        "Cloud Functions",
+        "Cloud Scheduler",
+        "Cloud Monitoring",
+        "Terraform",
+        "CI/CD",
+        "Chart.js"
+      ],
+      "highlights": [
+        "Supported 1,000+ daily active sessions across portfolio and fund analytics workflows.",
+        "Reduced monthly infrastructure costs by $2,400 by migrating 15+ cron workloads to serverless.",
+        "Cut deployment time by 60% via IaC automation, containers, and CI/CD."
+      ],
+      "metrics": {
+        "dailyActiveSessions": 1000,
+        "monthlyInfraSavingsUsd": 2400,
+        "cronWorkloadsMigrated": 15,
+        "deploymentTimeReductionPercent": 60,
+        "monteCarloIterationsPerRun": 1000000
+      }
+    }
+  ],
+  "skills": {
+    "languages": ["C++", "Java", "Go", "Python", "JavaScript", "TypeScript", "SQL", "Kotlin", "HCL"],
+    "backend": {
+      "frameworks": ["Spring Boot", "Express.js", "FastAPI", "Django"],
+      "runtime": ["Node.js"],
+      "apisAndProtocols": ["REST", "GraphQL", "gRPC", "WebSockets"],
+      "messagingAndStreaming": ["Kafka", "Cloud Pub/Sub"],
+      "caching": ["Redis"],
+      "datastores": ["PostgreSQL", "MySQL", "MongoDB"],
+      "vectorAndSearch": ["pgvector"],
+      "auth": ["JWT"]
+    },
+    "cloudAndDevOps": {
+      "cloud": ["AWS", "GCP"],
+      "computeAndServerless": ["ECS Fargate", "Cloud Functions", "Cloud Scheduler", "GKE"],
+      "containers": ["Docker", "Kubernetes"],
+      "iac": ["Terraform"],
+      "cicd": ["GitHub Actions", "Jenkins"],
+      "edgeAndDelivery": ["CloudFront"],
+      "storage": ["S3"],
+      "loadBalancing": ["ALB"],
+      "artifactRegistry": ["ECR"]
+    },
+    "observability": {
+      "tools": ["Prometheus", "Grafana", "Cloud Monitoring", "CloudWatch"],
+      "concepts": ["Metrics", "Dashboards", "Alerting"]
+    },
+    "frontendAndMobile": {
+      "web": ["React", "Next.js", "Redux", "Chart.js", "HTML", "CSS"],
+      "mobile": ["React Native", "Jetpack Compose"]
+    },
+    "mlAndAi": {
+      "frameworks": ["PyTorch", "scikit-learn", "HuggingFace"],
+      "systems": ["RAG pipelines", "LLM enrichment"]
+    },
+    "systems": {
+      "distributedSystems": ["Etcd", "Consistent hashing"],
+      "osAndIsolation": ["Linux cgroups"],
+      "serialization": ["Protocol Buffers"]
+    }
+  },
+  "education": [
+    {
+      "id": "sjsu-ms-cse",
+      "school": "San Jose State University",
+      "degree": "Master of Science",
+      "field": "Computer Software Engineering",
+      "date": { "start": "2025-08-01", "end": "2027-05-31", "isApprox": true },
+      "coursework": [
+        "Software Systems Engineering",
+        "Cloud Services",
+        "Virtualization Technologies",
+        "Enterprise Software Platforms"
+      ]
+    },
+    {
+      "id": "nirma-btech-cse",
+      "school": "Nirma University",
+      "degree": "Bachelor of Technology",
+      "field": "Computer Science and Engineering",
+      "date": { "start": "2020-10-01", "end": "2024-06-30", "isApprox": true },
+      "coursework": [
+        "Data Structures and Algorithms",
+        "Object-Oriented Programming",
+        "Operating Systems",
+        "DBMS",
+        "Machine Learning"
+      ]
+    }
+  ],
+  "achievements": [
+    {
+      "id": "mined-hackathon-open-innovation",
+      "title": "Ranked 1st in Open Innovation track at MINED Hackathon",
+      "details": "Nirma University plus Binghamton University."
+    },
+    {
+      "id": "nirma-coding-contests-and-events",
+      "title": "Won 6 coding contests and organized 5+ coding events",
+      "details": "Competed against 500+ students."
+    }
+  ],
+  "resume": {
+    "updatedYear": 2025,
+    "text": "Nihar PatelSan Jose, CA | +1 (408) 207-5620 | niharpatel718@gmail.com | linkedin.com/in/niharpatel4 | github.com/Nihar4EducationSan Jose State University | Master of Science in Computer Software Engineering Aug 2025 – May 2027Coursework: Software Systems Engineering, Cloud Services, Virtualization Technologies, Enterprise Software PlatformsNirma University | Bachelor of Technology in Computer Science and Engineering Oct 2020 – Jun 2024Coursework: Data Structures and Algorithms, Object-Oriented Programming, OS, DBMS, Machine LearningTechnical SkillsLanguages: C++, Java, Go (Golang), Python, SQL, JavaScript, TypeScriptBackend: Spring Boot, FastAPI, REST, GraphQL, gRPC, WebSockets, Kafka, Redis, PostgreSQL, MongoDBFrontend: React.js, Next.js, Redux, HTML/CSS, Android Studio, React NativeCloud & DevOps: AWS, GCP, Docker, Kubernetes, Terraform, Jenkins, GitHub Actions, CI/CD, Prometheus, GrafanaML: PyTorch, Scikit-learn, HuggingFace, RAG PipelinesExperienceGreatBear | Software Engineer Ahmedabad, India | Jul 2024 – Jun 2025• Architected a distributed Java microservices backend for an investment platform using GraphQL APIs, supporting1,000+ daily active sessions across portfolio and fund analytics workflows• Built a multithreaded C++ stock price forecasting service running 1,000,000+ Monte Carlo iterations per run, consumingjobs via Cloud Pub/Sub and persisting forecasts to MySQL for portfolio and risk analytics• Migrated 15+ legacy cron-based workloads from dedicated servers to serverless Go Cloud Functions triggered by GCPCloud Scheduler, reducing monthly infrastructure costs by $2,400• Developed a responsive React/TypeScript dashboard with interactive Chart.js visualizations and real-time data tables• Automated 10+ GCP services (Cloud Storage, Cloud Pub/Sub, Cloud Monitoring, etc.) via Terraform and deliveredcontainerized services with Docker, Kubernetes (GKE), and CI/CD pipelines, cutting deployment time by 60%• Collaborated cross-functionally to author design docs and ship reliable distributed services, owning unit andintegration testing, production monitoring, and on-call debugging to sustain high service uptimeGreatBear | Software Engineer Intern Ahmedabad, India | Jan 2024 – Jun 2024• Built a scalable Go order-execution microservice using Redis queues and goroutines (10 workers), cutting latency by 80%• Architected Java multi-role access control with JWT authentication middleware, securing 220+ API endpoints• Developed Go data pipeline syncing 10,000+ mutual fund NAV records daily from AMFI, eliminating manual entry• Developed Java Spring Boot REST APIs and WebSockets powering a real-time portfolio dashboardFlourish Creations | Software Engineer Intern Ahmedabad, India | May 2023 – Jul 2023• Built C++ data pipeline consuming 50K+ events/sec from Kafka, profiled and resolved 10+ production bugs• Implemented Prometheus + Grafana monitoring for CPU/memory bottlenecks, reducing incident detection by 70%• Optimized C++ batch jobs with multithreading and memory pooling, debugging leaks for 3x throughput gainProjectsReal-Time News Analysis and Alert Platform | Python, Go, Next.js, Kafka, Redis, PostgreSQL, Docker, AWS Demo• Built Python LLM enrichment pipeline with semantic deduplication and dynamic topic clustering using pgvector,reducing LLM API calls by 60% while processing 10K+ daily articles• Developed Go notification microservice with Redis caching and topic-based clustering, matching user preferences andreducing duplicate alerts by 70% with sub-2-minute latency• Designed event-driven microservices architecture with Kafka stream processing, PostgreSQL, and Next.js frontend,containerized with Docker and deployed on AWS ECSDistributed Job Orchestration Platform | Java, Go, gRPC, Etcd, Prometheus, Terraform• Built fault-tolerant Java control plane with Etcd consensus and consistent hashing, scheduling 10,000+ jobs acrossdynamic nodes and maintaining availability during network partitions• Implemented Go worker agents using Linux cgroups to isolate resources and run containers securely in production• Shipped Prometheus metrics and Grafana dashboards for real-time health, utilization, and alerting globally at scaleAchievements• Ranked 1st in the Open Innovation track at MINED Hackathon by Nirma University and Binghamton University• Won 6 coding contests and organized 5+ coding events at Nirma University, competing against 500+ students."
+  }
+}

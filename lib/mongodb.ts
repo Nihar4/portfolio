@@ -1,31 +1,27 @@
 import { MongoClient } from "mongodb";
 
-const MONGODB_URI = process.env.MONGODB_URI!;
+type MongoCache = {
+  client: MongoClient | null;
+  promise: Promise<MongoClient> | null;
+};
 
-if (!MONGODB_URI) {
-  throw new Error("Please define the MONGODB_URI environment variable");
+const globalCache = globalThis as typeof globalThis & { __mongoCache?: MongoCache };
+
+if (!globalCache.__mongoCache) {
+  globalCache.__mongoCache = { client: null, promise: null };
 }
 
-const options = {};
+export async function getMongoClient() {
+  const uri = process.env.MONGODB_URI;
+  if (!uri) return null;
 
-let client: MongoClient;
-let clientPromise: Promise<MongoClient>;
+  const cache = globalCache.__mongoCache!;
+  if (cache.client) return cache.client;
 
-declare global {
-  // eslint-disable-next-line no-var
-  var _mongoClientPromise: Promise<MongoClient> | undefined;
-}
-
-if (process.env.NODE_ENV === "development") {
-  // In development, use a global variable to preserve the client across HMR
-  if (!global._mongoClientPromise) {
-    client = new MongoClient(MONGODB_URI, options);
-    global._mongoClientPromise = client.connect();
+  if (!cache.promise) {
+    cache.promise = new MongoClient(uri).connect();
   }
-  clientPromise = global._mongoClientPromise;
-} else {
-  client = new MongoClient(MONGODB_URI, options);
-  clientPromise = client.connect();
-}
 
-export default clientPromise;
+  cache.client = await cache.promise;
+  return cache.client;
+}

@@ -1,4 +1,4 @@
-import clientPromise from "./mongodb";
+import { getMongoClient } from "./mongodb";
 
 export type LogEvent = {
   type: "api" | "chat" | "client";
@@ -22,11 +22,12 @@ export type LogEntry = {
 
 export type LogStore = Record<string, LogEntry>;
 
-const DB_NAME = "portfolio";
-const COLLECTION = "logs";
+const DB_NAME = process.env.MONGODB_DB || "portfolio";
+const COLLECTION = process.env.MONGODB_COLLECTION || "logs";
 
 const getCollection = async () => {
-  const client = await clientPromise;
+  const client = await getMongoClient();
+  if (!client) return null;
   return client.db(DB_NAME).collection<LogEntry>(COLLECTION);
 };
 
@@ -73,6 +74,7 @@ export const appendLog = async (headers: Headers, event: LogEvent) => {
   const time = event.time || new Date().toISOString();
 
   const col = await getCollection();
+  if (!col) return;
 
   await col.updateOne(
     { ip },
@@ -92,6 +94,7 @@ export const appendLog = async (headers: Headers, event: LogEvent) => {
 
 export const loadLogs = async (): Promise<LogStore> => {
   const col = await getCollection();
+  if (!col) return {};
   const docs = await col.find({}).toArray();
 
   const store: LogStore = {};

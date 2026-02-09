@@ -2,7 +2,6 @@
 
 import { HomeChatInput } from "@/components/chat/home-chat-input";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -11,16 +10,41 @@ import {
 import { ThemeToggle } from "@/components/theme-toggle";
 import Image from "next/image";
 import Link from "next/link";
-import { FileText, Github, Linkedin, Mail, Terminal, X } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import {
+  FileText, Github, Linkedin, Mail, Terminal, X,
+  Briefcase, GraduationCap, Code2,
+  Sparkles, Building2, ChevronDown, Trophy,
+} from "lucide-react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+
+/* ── constants ─────────────────────────────────────────── */
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 26 };
 
+const stagger = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.08 } },
+};
+const fadeUp = {
+  hidden: { opacity: 0, y: 24 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+};
+
+/* ── helpers ───────────────────────────────────────────── */
+
+const fmtDate = (s?: string) => {
+  if (!s) return "";
+  const d = new Date(s);
+  return d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+};
+
 const formatDateRange = (date?: { start?: string; end?: string }) => {
   if (!date) return "";
-  if (date.start && date.end) return `${date.start} — ${date.end}`;
-  return date.start || date.end || "";
+  const a = fmtDate(date.start);
+  const b = fmtDate(date.end);
+  if (a && b) return `${a} — ${b}`;
+  return a || b || "";
 };
 
 const formatSkillGroup = (title: string, items?: string[]) => ({
@@ -31,30 +55,58 @@ const formatSkillGroup = (title: string, items?: string[]) => ({
   logs: items && items.length > 0 ? items : [],
 });
 
+/* ── section header ────────────────────────────────────── */
+
+function SectionHeader({
+  icon,
+  title,
+  subtitle,
+}: {
+  icon: ReactNode;
+  title: string;
+  subtitle: string;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-80px" }}
+      transition={{ duration: 0.5 }}
+      className="space-y-1"
+    >
+      <div className="flex items-center gap-2 text-primary text-sm font-medium tracking-wide">
+        {icon}
+        <span className="uppercase">{subtitle}</span>
+      </div>
+      <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">{title}</h2>
+    </motion.div>
+  );
+}
+
+/* ── page ──────────────────────────────────────────────── */
+
 export default function Home() {
   const [data, setData] = useState<any | null>(null);
-  const [activeCategory, setActiveCategory] = useState<
-    "experience" | "projects" | "skills" | "education"
-  >("experience");
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
   const [terminalSelection, setTerminalSelection] = useState<"github" | "exit" | null>(null);
   const [terminalMessages, setTerminalMessages] = useState<string[]>([]);
 
-  const sendClientLog = (event: string, data?: Record<string, unknown>) => {
+  /* client log */
+  const sendClientLog = (event: string, extra?: Record<string, unknown>) => {
     if (typeof window === "undefined") return;
     fetch("/api/log", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ event, data }),
+      body: JSON.stringify({ event, data: extra }),
       keepalive: true,
     }).catch(() => {});
   };
 
   useEffect(() => {
     fetch("/api/projects")
-      .then((res) => res.json())
-      .then((payload) => setData(payload))
-      .catch((err) => console.error("Failed to load projects:", err));
+      .then((r) => r.json())
+      .then(setData)
+      .catch(console.error);
   }, []);
 
   useEffect(() => {
@@ -62,13 +114,16 @@ export default function Home() {
       path: typeof window !== "undefined" ? window.location.pathname : "/",
       referrer: typeof document !== "undefined" ? document.referrer || undefined : undefined,
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  /* ── data ──────────────────────────────────────────── */
 
   const experiences = data?.experience || [];
   const projects = data?.projects || [];
   const education = data?.education || [];
   const skills = data?.skills || null;
-  const profile = data?.profile || null;
+  const achievements = data?.achievements || [];
 
   const projectOrder = [
     "real-time-news-analysis-and-alert-platform",
@@ -87,67 +142,73 @@ export default function Home() {
   ];
 
   const orderBy = (list: any[], order: string[]) => {
-    const rank = new Map(order.map((id, index) => [id, index]));
+    const rank = new Map(order.map((id, i) => [id, i]));
     return [...list].sort((a, b) => {
-      const aRank = rank.has(a.id) ? rank.get(a.id)! : Number.MAX_SAFE_INTEGER;
-      const bRank = rank.has(b.id) ? rank.get(b.id)! : Number.MAX_SAFE_INTEGER;
-      if (aRank === bRank) {
-        const aLabel = a.title || a.company || a.school || a.id || "";
-        const bLabel = b.title || b.company || b.school || b.id || "";
-        return String(aLabel).localeCompare(String(bLabel));
-      }
-      return aRank - bRank;
+      const ar = rank.get(a.id) ?? Infinity;
+      const br = rank.get(b.id) ?? Infinity;
+      return ar !== br
+        ? ar - br
+        : String(a.title || a.id || "").localeCompare(String(b.title || b.id || ""));
     });
   };
 
   const orderedProjects = useMemo(() => orderBy(projects, projectOrder), [projects]);
   const orderedExperiences = useMemo(() => orderBy(experiences, experienceOrder), [experiences]);
 
-  const projectItems = useMemo(() => {
-    return orderedProjects.map((project: any) => ({
-      id: project.id,
-      kind: "projects",
-      title: project.title,
-      subtitle: project.summary || "Project",
-      stack: project.techStack || [],
-      logs: project.highlights || [],
-      details: project.details,
-      repo: project.links?.repo,
-    }));
-  }, [orderedProjects]);
+  /* transformed items (used by terminal dialog) */
 
-  const experienceItems = useMemo(() => {
-    return orderedExperiences.map((exp: any) => ({
-      id: exp.id,
-      kind: "experience",
-      title: `${exp.company} • ${exp.role}`,
-      subtitle: formatDateRange(exp.date),
-      date: formatDateRange(exp.date),
-      company: exp.company,
-      role: exp.role,
-      location: exp.location,
-      stack: exp.techStack || [],
-      logs: exp.highlights || [],
-      summary: exp.summary,
-    }));
-  }, [orderedExperiences]);
+  const experienceItems = useMemo(
+    () =>
+      orderedExperiences.map((e: any) => ({
+        id: e.id,
+        kind: "experience",
+        title: `${e.company} • ${e.role}`,
+        subtitle: formatDateRange(e.date),
+        date: formatDateRange(e.date),
+        company: e.company,
+        role: e.role,
+        location: e.location,
+        stack: e.techStack || [],
+        logs: e.highlights || [],
+        summary: e.summary,
+      })),
+    [orderedExperiences],
+  );
 
-  const educationItems = useMemo(() => {
-    return education.map((edu: any) => ({
-      id: edu.id,
-      kind: "education",
-      title: edu.school,
-      subtitle: `${edu.degree} in ${edu.field}`,
-      degree: `${edu.degree} in ${edu.field}`,
-      date: formatDateRange(edu.date),
-      coursework: edu.coursework || [],
-      logs: edu.coursework || [],
-    }));
-  }, [education]);
+  const projectItems = useMemo(
+    () =>
+      orderedProjects.map((p: any) => ({
+        id: p.id,
+        kind: "projects",
+        title: p.title,
+        subtitle: p.summary || "Project",
+        stack: p.techStack || [],
+        logs: p.highlights || [],
+        details: p.details,
+        repo: p.links?.repo,
+      })),
+    [orderedProjects],
+  );
+
+  const educationItems = useMemo(
+    () =>
+      education.map((e: any) => ({
+        id: e.id,
+        kind: "education",
+        title: e.school,
+        subtitle: `${e.degree} in ${e.field}`,
+        degree: `${e.degree} in ${e.field}`,
+        date: formatDateRange(e.date),
+        coursework: e.coursework || [],
+        logs: e.coursework || [],
+      })),
+    [education],
+  );
 
   const skillItems = useMemo(() => {
     if (!skills) return [];
     const items: any[] = [];
+
     items.push(formatSkillGroup("Languages", skills.languages));
 
     const backend = skills.backend || {};
@@ -160,7 +221,7 @@ export default function Home() {
         backend.runtime ? `Runtime: ${backend.runtime.join(", ")}` : null,
         backend.frameworks ? `Frameworks: ${backend.frameworks.join(", ")}` : null,
         backend.apisAndProtocols ? `APIs & Protocols: ${backend.apisAndProtocols.join(", ")}` : null,
-        backend.messagingAndStreaming ? `Messaging/Streaming: ${backend.messagingAndStreaming.join(", ")}` : null,
+        backend.messagingAndStreaming ? `Messaging: ${backend.messagingAndStreaming.join(", ")}` : null,
         backend.caching ? `Caching: ${backend.caching.join(", ")}` : null,
         backend.datastores ? `Datastores: ${backend.datastores.join(", ")}` : null,
         backend.vectorAndSearch ? `Vector/Search: ${backend.vectorAndSearch.join(", ")}` : null,
@@ -176,11 +237,11 @@ export default function Home() {
       subtitle: "Skill Set",
       logs: [
         cloud.cloud ? `Cloud: ${cloud.cloud.join(", ")}` : null,
-        cloud.computeAndServerless ? `Compute/Serverless: ${cloud.computeAndServerless.join(", ")}` : null,
+        cloud.computeAndServerless ? `Compute: ${cloud.computeAndServerless.join(", ")}` : null,
         cloud.containers ? `Containers: ${cloud.containers.join(", ")}` : null,
         cloud.iac ? `IaC: ${cloud.iac.join(", ")}` : null,
         cloud.cicd ? `CI/CD: ${cloud.cicd.join(", ")}` : null,
-        cloud.edgeAndDelivery ? `Edge/Delivery: ${cloud.edgeAndDelivery.join(", ")}` : null,
+        cloud.edgeAndDelivery ? `Edge: ${cloud.edgeAndDelivery.join(", ")}` : null,
         cloud.storage ? `Storage: ${cloud.storage.join(", ")}` : null,
         cloud.loadBalancing ? `Load Balancing: ${cloud.loadBalancing.join(", ")}` : null,
         cloud.artifactRegistry ? `Registry: ${cloud.artifactRegistry.join(", ")}` : null,
@@ -223,289 +284,614 @@ export default function Home() {
       ].filter(Boolean),
     });
 
-    const systems = skills.systems || {};
+    const sys = skills.systems || {};
     items.push({
       id: "skill-systems",
       kind: "skills",
       title: "Systems",
       subtitle: "Skill Set",
       logs: [
-        systems.distributedSystems ? `Distributed: ${systems.distributedSystems.join(", ")}` : null,
-        systems.osAndIsolation ? `Isolation: ${systems.osAndIsolation.join(", ")}` : null,
-        systems.serialization ? `Serialization: ${systems.serialization.join(", ")}` : null,
+        sys.distributedSystems ? `Distributed: ${sys.distributedSystems.join(", ")}` : null,
+        sys.osAndIsolation ? `Isolation: ${sys.osAndIsolation.join(", ")}` : null,
+        sys.serialization ? `Serialization: ${sys.serialization.join(", ")}` : null,
       ].filter(Boolean),
     });
 
-    return items.filter((item) => item.logs && item.logs.length > 0);
+    return items.filter((i) => i.logs?.length > 0);
   }, [skills]);
 
-  const activeList =
-    activeCategory === "experience"
-      ? experienceItems
-      : activeCategory === "projects"
-        ? projectItems
-        : activeCategory === "skills"
-          ? skillItems
-          : educationItems;
+  /* ── terminal dialog logic ────────────────────────── */
 
   const openTerminal = (item: any) => setSelectedItem(item);
   const closeTerminal = () => setSelectedItem(null);
-
-  useEffect(() => {
-    sendClientLog("tab_change", { tab: activeCategory });
-  }, [activeCategory]);
-
-  const terminalHeader = selectedItem
-    ? selectedItem.title || selectedItem.school
-    : "Terminal";
+  const terminalHeader = selectedItem?.title || selectedItem?.school || "Terminal";
 
   useEffect(() => {
     if (!selectedItem) return;
     setTerminalMessages([]);
-    if (selectedItem.kind === "projects" && selectedItem.repo) {
-      setTerminalSelection("github");
-    } else {
-      setTerminalSelection("exit");
-    }
+    setTerminalSelection(selectedItem.kind === "projects" && selectedItem.repo ? "github" : "exit");
   }, [selectedItem]);
 
   useEffect(() => {
     if (!selectedItem) return;
-
     const options =
-      selectedItem.kind === "projects" && selectedItem.repo
-        ? ["github", "exit"]
-        : ["exit"];
+      selectedItem.kind === "projects" && selectedItem.repo ? ["github", "exit"] : ["exit"];
 
-    const moveSelection = (direction: "next" | "prev") => {
+    const move = (dir: "next" | "prev") => {
       if (!terminalSelection) return;
-      const currentIndex = options.indexOf(terminalSelection);
-      if (currentIndex === -1) return;
-      const nextIndex =
-        direction === "next"
-          ? (currentIndex + 1) % options.length
-          : (currentIndex - 1 + options.length) % options.length;
-      setTerminalSelection(options[nextIndex] as "github" | "exit");
+      const idx = options.indexOf(terminalSelection);
+      if (idx < 0) return;
+      const next =
+        dir === "next"
+          ? (idx + 1) % options.length
+          : (idx - 1 + options.length) % options.length;
+      setTerminalSelection(options[next] as "github" | "exit");
     };
 
-    const runSelection = (choice: "github" | "exit", actionLabel?: string) => {
+    const run = (choice: "github" | "exit", label?: string) => {
       if (choice === "github" && selectedItem.repo) {
-        setTerminalMessages((prev) => [
-          ...prev,
-          `> Executing: ${actionLabel || "open_github.sh"}...`,
+        setTerminalMessages((p) => [
+          ...p,
+          `> Executing: ${label || "open_github.sh"}...`,
           "> Opening repository in new tab.",
         ]);
         window.open(selectedItem.repo, "_blank", "noopener,noreferrer");
       } else {
-        setTerminalMessages((prev) => [
-          ...prev,
-          `> ${actionLabel || "exit_terminal.sh"}...`,
+        setTerminalMessages((p) => [
+          ...p,
+          `> ${label || "exit_terminal.sh"}...`,
           "> Closing terminal.",
         ]);
         closeTerminal();
       }
     };
 
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)) {
-        event.preventDefault();
-      }
-
-      if (event.key === "ArrowRight" || event.key === "ArrowDown") {
-        moveSelection("next");
-        return;
-      }
-      if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
-        moveSelection("prev");
-        return;
-      }
-
-      if (event.key === "Enter" && terminalSelection) {
-        runSelection(terminalSelection, terminalSelection === "github" ? "open_github.sh" : "exit_terminal.sh");
-      }
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key))
+        e.preventDefault();
+      if (e.key === "ArrowRight" || e.key === "ArrowDown") return move("next");
+      if (e.key === "ArrowLeft" || e.key === "ArrowUp") return move("prev");
+      if (e.key === "Enter" && terminalSelection)
+        run(
+          terminalSelection,
+          terminalSelection === "github" ? "open_github.sh" : "exit_terminal.sh",
+        );
     };
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
   }, [selectedItem, terminalSelection]);
 
-  return (
-    <main className="min-h-screen bg-background text-foreground selection:bg-muted overflow-x-hidden">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 flex flex-col min-h-screen">
-        <header className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4 mb-10 sm:mb-12">
-          <div className="flex items-center gap-2">
-            <span className="relative flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-            </span>
-            <span className="text-sm font-medium text-muted-foreground">Open for 2026 Summer Internships</span>
-          </div>
+  /* ── render ────────────────────────────────────────── */
 
-          <div className="flex items-center gap-4 text-muted-foreground">
+  return (
+    <main className="min-h-screen bg-background text-foreground overflow-x-hidden">
+      {/* ── background effects ─────────────────────── */}
+      <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle,#d1d5db_1px,transparent_1px)] dark:bg-[radial-gradient(circle,rgba(255,255,255,0.06)_1px,transparent_1px)] bg-size-[28px_28px] pointer-events-none" />
+      <div className="fixed -top-48 -right-48 w-125 h-125 rounded-full bg-primary/8 blur-[140px] pointer-events-none -z-10" />
+      <div className="fixed -bottom-48 -left-48 w-125 h-125 rounded-full bg-accent/8 blur-[140px] pointer-events-none -z-10" />
+
+      {/* ── sticky navbar ──────────────────────────── */}
+      <nav className="sticky top-0 z-50 border-b border-border/40 bg-background/70 backdrop-blur-xl">
+        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+          <Link href="/" className="font-bold text-lg tracking-tight select-none">
+            NP<span className="text-primary">.</span>
+          </Link>
+          <div className="flex items-center gap-1">
+            {[
+              { href: "https://www.linkedin.com/in/niharpatel4", icon: <Linkedin className="w-4 h-4" />, label: "LinkedIn" },
+              { href: "https://github.com/Nihar4", icon: <Github className="w-4 h-4" />, label: "GitHub" },
+              { href: "mailto:niharpatel718@gmail.com", icon: <Mail className="w-4 h-4" />, label: "Email" },
+              { href: "/resume.pdf", icon: <FileText className="w-4 h-4" />, label: "Resume" },
+            ].map((l) => (
+              <Link
+                key={l.label}
+                href={l.href}
+                target={l.href.startsWith("http") || l.href.endsWith(".pdf") ? "_blank" : undefined}
+                className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+                aria-label={l.label}
+              >
+                {l.icon}
+              </Link>
+            ))}
+            <div className="w-px h-5 bg-border mx-1" />
+            <ThemeToggle />
+          </div>
+        </div>
+      </nav>
+
+      {/* ── hero section ───────────────────────────── */}
+      <section className="relative flex items-center justify-center min-h-[88vh] px-6">
+        <div className="max-w-4xl mx-auto w-full">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="flex flex-col items-center text-center space-y-8"
+          >
+            {/* availability badge */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.15 }}
+            >
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-green-500/30 bg-green-500/10 text-green-600 dark:text-green-400 text-sm font-medium">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+                </span>
+                Open for 2026 Summer Internships
+              </div>
+            </motion.div>
+
+            {/* avatar */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.1, ...spring }}
+            >
+              <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full overflow-hidden ring-[3px] ring-primary/20 ring-offset-4 ring-offset-background shadow-2xl shadow-primary/10 bg-card">
+                <Image
+                  src="/me.png"
+                  alt="Nihar Patel"
+                  fill
+                  className="object-cover"
+                  sizes="128px"
+                  priority
+                />
+              </div>
+            </motion.div>
+
+            {/* headline */}
+            <div className="space-y-4">
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.18 }}
+                className="text-5xl sm:text-6xl md:text-7xl font-bold tracking-tight leading-[1.1]"
+              >
+                <span className="bg-linear-to-br from-foreground via-foreground/90 to-muted-foreground/70 bg-clip-text text-transparent">
+                  Nihar Patel
+                </span>
+              </motion.h1>
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.28 }}
+                className="text-lg sm:text-xl text-muted-foreground max-w-xl mx-auto leading-relaxed"
+              >
+                Software engineer building{" "}
+                <span className="text-foreground font-medium">distributed systems</span>,{" "}
+                <span className="text-foreground font-medium">cloud platforms</span>, &amp;{" "}
+                <span className="text-foreground font-medium">full-stack products</span>
+              </motion.p>
+            </div>
+
+            {/* cta buttons */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.38 }}
+              className="flex flex-wrap justify-center gap-3"
+            >
+              <Link
+                href="#chat"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground font-medium text-sm hover:brightness-110 transition-all shadow-lg shadow-primary/25"
+              >
+                <Sparkles className="w-4 h-4" />
+                Ask my AI
+              </Link>
+              <Link
+                href="/resume.pdf"
+                target="_blank"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-border bg-card text-foreground font-medium text-sm hover:bg-muted transition-colors"
+              >
+                <FileText className="w-4 h-4" />
+                Resume
+              </Link>
+            </motion.div>
+
+            {/* stats */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.48 }}
+              className="grid grid-cols-3 divide-x divide-border pt-2"
+            >
+              {[
+                { value: "2+", label: "Years Exp." },
+                { value: "7+", label: "Projects" },
+                { value: "MS", label: "@ SJSU" },
+              ].map((s) => (
+                <div key={s.label} className="px-6 sm:px-10 text-center">
+                  <div className="text-xl sm:text-2xl font-bold">{s.value}</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground">{s.label}</div>
+                </div>
+              ))}
+            </motion.div>
+
+            {/* scroll cue */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.2 }}
+              className="pt-6"
+            >
+              <motion.div
+                animate={{ y: [0, 8, 0] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <ChevronDown className="w-5 h-5 text-muted-foreground/60" />
+              </motion.div>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ── experience ─────────────────────────────── */}
+      <section id="experience" className="py-24 px-6">
+        <div className="max-w-5xl mx-auto">
+          <SectionHeader
+            icon={<Briefcase className="w-5 h-5" />}
+            title="Experience"
+            subtitle="Where I've worked"
+          />
+
+          {/* timeline */}
+          <div className="relative mt-14 pl-8 sm:pl-10 border-l-2 border-border/50 space-y-10">
+            {experienceItems.map((item: any, idx: number) => (
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, x: -16 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ delay: idx * 0.1, duration: 0.5 }}
+                className="relative"
+              >
+                {/* timeline dot */}
+                <div className="absolute -left-6.5 sm:-left-7.25 top-5 w-4 h-4 rounded-full bg-primary/80 border-[3px] border-background shadow-md shadow-primary/20" />
+
+                <button
+                  onClick={() => openTerminal(item)}
+                  className="w-full text-left group"
+                >
+                  <div className="p-5 sm:p-6 rounded-2xl border border-border/50 bg-card/60 backdrop-blur-sm hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                          <Building2 className="w-4 h-4 text-primary" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-base sm:text-lg group-hover:text-primary transition-colors">
+                            {item.company}
+                          </h3>
+                          <p className="text-sm text-muted-foreground">{item.role}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground sm:text-right shrink-0 pl-13 sm:pl-0">
+                        <span>{item.date}</span>
+                        <span className="hidden sm:inline">•</span>
+                        <span className="hidden sm:inline">{item.location}</span>
+                      </div>
+                    </div>
+
+                    <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                      {item.summary}
+                    </p>
+
+                    <div className="flex flex-wrap gap-1.5">
+                      {item.stack.slice(0, 8).map((t: string) => (
+                        <Badge
+                          key={t}
+                          variant="outline"
+                          className="text-[11px] font-mono bg-muted/40 border-border/40 group-hover:border-primary/20 transition-colors"
+                        >
+                          {t}
+                        </Badge>
+                      ))}
+                      {item.stack.length > 8 && (
+                        <Badge variant="outline" className="text-[11px] font-mono bg-muted/40">
+                          +{item.stack.length - 8}
+                        </Badge>
+                      )}
+                    </div>
+
+                    {/* click hint */}
+                    <div className="mt-4 flex items-center gap-1.5 text-xs text-muted-foreground/70 group-hover:text-primary/70 transition-colors">
+                      <Terminal className="w-3 h-3" />
+                      <span>Click to open terminal</span>
+                    </div>
+                  </div>
+                </button>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── projects ───────────────────────────────── */}
+      <section id="projects" className="py-24 px-6">
+        <div className="max-w-6xl mx-auto">
+          <SectionHeader
+            icon={<Code2 className="w-5 h-5" />}
+            title="Projects"
+            subtitle="What I've built"
+          />
+
+          <motion.div
+            variants={stagger}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-60px" }}
+            className="mt-14 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+          >
+            {projectItems.map((item: any, idx: number) => (
+              <motion.div
+                key={item.id}
+                variants={fadeUp}
+                className={idx < 2 ? "lg:row-span-1" : ""}
+              >
+                <button
+                  onClick={() => openTerminal(item)}
+                  className="w-full h-full text-left group"
+                >
+                  <div className="relative h-full p-5 sm:p-6 rounded-2xl border border-border/50 bg-card/60 backdrop-blur-sm hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 flex flex-col overflow-hidden">
+                    {/* top glow line */}
+                    <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-primary/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                    <div className="flex items-start justify-between gap-2 mb-3">
+                      <h3 className="font-semibold leading-snug group-hover:text-primary transition-colors">
+                        {item.title}
+                      </h3>
+                      <Terminal className="w-4 h-4 text-muted-foreground/40 group-hover:text-primary shrink-0 mt-0.5 transition-colors" />
+                    </div>
+
+                    <p className="text-sm text-muted-foreground line-clamp-3 flex-1 mb-4">
+                      {item.subtitle}
+                    </p>
+
+                    <div className="flex flex-wrap gap-1.5">
+                      {item.stack.slice(0, 5).map((t: string) => (
+                        <Badge
+                          key={t}
+                          variant="outline"
+                          className="text-[11px] font-mono bg-muted/40 border-border/40 group-hover:border-primary/20 transition-colors"
+                        >
+                          {t}
+                        </Badge>
+                      ))}
+                      {item.stack.length > 5 && (
+                        <Badge variant="outline" className="text-[11px] font-mono bg-muted/40">
+                          +{item.stack.length - 5}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                </button>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ── skills ─────────────────────────────────── */}
+      <section id="skills" className="py-24 px-6">
+        <div className="max-w-6xl mx-auto">
+          <SectionHeader
+            icon={<Sparkles className="w-5 h-5" />}
+            title="Skills"
+            subtitle="Technologies I work with"
+          />
+
+          <motion.div
+            variants={stagger}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-60px" }}
+            className="mt-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+          >
+            {skillItems.map((group: any) => (
+              <motion.div
+                key={group.id}
+                variants={fadeUp}
+                className="p-5 rounded-2xl border border-border/50 bg-card/60 backdrop-blur-sm hover:border-primary/20 transition-colors"
+              >
+                <h3 className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">
+                  {group.title}
+                </h3>
+                <ul className="space-y-1.5">
+                  {group.logs.map((line: string, i: number) => (
+                    <li key={i} className="text-sm text-muted-foreground leading-relaxed">
+                      {line}
+                    </li>
+                  ))}
+                </ul>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ── education ──────────────────────────────── */}
+      <section id="education" className="py-24 px-6">
+        <div className="max-w-5xl mx-auto">
+          <SectionHeader
+            icon={<GraduationCap className="w-5 h-5" />}
+            title="Education"
+            subtitle="Where I studied"
+          />
+
+          <motion.div
+            variants={stagger}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="mt-14 grid grid-cols-1 md:grid-cols-2 gap-4"
+          >
+            {educationItems.map((item: any) => (
+              <motion.div key={item.id} variants={fadeUp}>
+                <button
+                  onClick={() => openTerminal(item)}
+                  className="w-full text-left group"
+                >
+                  <div className="p-6 rounded-2xl border border-border/50 bg-card/60 backdrop-blur-sm hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                        <GraduationCap className="w-5 h-5 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold group-hover:text-primary transition-colors">
+                          {item.title}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">{item.subtitle}</p>
+                      </div>
+                    </div>
+                    <div className="text-xs text-muted-foreground mb-4">{item.date}</div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {(item.coursework || []).map((c: string) => (
+                        <Badge
+                          key={c}
+                          variant="outline"
+                          className="text-[11px] bg-muted/40 border-border/40"
+                        >
+                          {c}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                </button>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ── achievements ───────────────────────────── */}
+      {achievements.length > 0 && (
+        <section className="py-16 px-6">
+          <div className="max-w-5xl mx-auto">
+            <motion.div
+              variants={stagger}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              className="grid grid-cols-1 sm:grid-cols-2 gap-4"
+            >
+              {achievements.map((a: any) => (
+                <motion.div
+                  key={a.id}
+                  variants={fadeUp}
+                  className="flex items-start gap-3 p-5 rounded-2xl border border-amber-500/20 bg-amber-500/5"
+                >
+                  <Trophy className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium">{a.title}</p>
+                    {a.details && (
+                      <p className="text-xs text-muted-foreground mt-1">{a.details}</p>
+                    )}
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          </div>
+        </section>
+      )}
+
+      {/* ── AI chat CTA ────────────────────────────── */}
+      <section id="chat" className="py-24 px-6">
+        <div className="max-w-3xl mx-auto text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="space-y-6"
+          >
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/30 bg-primary/10 text-primary text-xs font-medium">
+              <Sparkles className="w-3 h-3" />
+              AI-Powered
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
+              Ask me anything
+            </h2>
+            <p className="text-muted-foreground max-w-md mx-auto">
+              Chat with my AI to learn more about my experience, projects, and skills.
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.15, duration: 0.5 }}
+            className="mt-8"
+          >
+            <HomeChatInput />
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ── footer ─────────────────────────────────── */}
+      <footer className="border-t border-border/40 py-8 px-6">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
+          <span>&copy; {new Date().getFullYear()} Nihar Patel</span>
+          <div className="flex items-center gap-5">
             <Link
               href="https://www.linkedin.com/in/niharpatel4"
               target="_blank"
-              className="p-2 hover:text-foreground hover:bg-muted rounded-full transition-all"
-              aria-label="LinkedIn"
+              className="hover:text-foreground transition-colors"
             >
-              <Linkedin className="w-5 h-5" />
+              LinkedIn
             </Link>
             <Link
               href="https://github.com/Nihar4"
               target="_blank"
-              className="p-2 hover:text-foreground hover:bg-muted rounded-full transition-all"
-              aria-label="GitHub"
+              className="hover:text-foreground transition-colors"
             >
-              <Github className="w-5 h-5" />
+              GitHub
             </Link>
             <Link
               href="mailto:niharpatel718@gmail.com"
-              className="p-2 hover:text-foreground hover:bg-muted rounded-full transition-all"
-              aria-label="Email"
+              className="hover:text-foreground transition-colors"
             >
-              <Mail className="w-5 h-5" />
+              Email
             </Link>
-            <Link
-              href="/resume.pdf"
-              target="_blank"
-              className="p-2 hover:text-foreground hover:bg-muted rounded-full transition-all"
-              aria-label="Resume"
-            >
-              <FileText className="w-5 h-5" />
-            </Link>
-            <ThemeToggle />
           </div>
-        </header>
+        </div>
+      </footer>
 
-        <motion.section
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={spring}
-          className="flex flex-col items-center text-center mb-10 space-y-6"
-        >
-          <div className="relative w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-border shadow-2xl bg-card">
-            <Image
-              src="/me.png"
-              alt="Nihar Memoji"
-              fill
-              className="object-cover"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              priority
-            />
-          </div>
-
-          <div className="space-y-2">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight">
-              Hey, I&apos;m Nihar <span className="animate-wave inline-block origin-bottom-right">👋</span>
-            </h1>
-            <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl sm:max-w-3xl mx-auto">
-              Master&apos;s in Software Engineering Student at San José State University
-            </p>
-            <div className="pt-2">
-              <Badge variant="outline" className="px-3 py-1 text-sm border-border text-muted-foreground">
-                ✨ AI Portfolio
-              </Badge>
-            </div>
-          </div>
-        </motion.section>
-
-        <motion.section
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ ...spring, delay: 0.05 }}
-          className="w-full max-w-3xl mx-auto flex-1 flex flex-col mb-10 sm:mb-12 min-h-[100px]"
-        >
-          <div className="w-full">
-            <HomeChatInput />
-          </div>
-        </motion.section>
-
-        <motion.section
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ ...spring, delay: 0.1 }}
-          className="space-y-6"
-        >
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
-            {(["experience", "projects", "skills", "education"] as const).map((category) => (
-              <button
-                key={category}
-                onClick={() => setActiveCategory(category)}
-                className={`text-base sm:text-xl md:text-3xl font-semibold font-mono uppercase tracking-[0.2em] sm:tracking-[0.28em] transition-all ${
-                  activeCategory === category
-                    ? "text-primary"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {category.toUpperCase()}
-              </button>
-            ))}
-          </div>
-
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeCategory}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={spring}
-              className="max-w-3xl mx-auto w-full"
-            >
-              <Card className="bg-card/70 border-border/60 backdrop-blur-md">
-                <div className="p-4 sm:p-6 space-y-3 sm:space-y-4 max-h-[55vh] sm:max-h-[60vh] min-h-[36vh] sm:min-h-[40vh] overflow-y-auto">
-                  {activeList.length === 0 && (
-                    <div className="text-sm text-muted-foreground">No entries yet.</div>
-                  )}
-                  {activeList.map((item: any) => (
-                    <motion.button
-                      key={item.id || item.school}
-                      layout
-                      whileHover={{ scale: 1.01 }}
-                      onClick={() => openTerminal(item)}
-                      className="w-full text-left rounded-xl border border-border/60 bg-background/60 px-3 py-2 sm:px-4 sm:py-3 hover:border-primary/60 hover:bg-muted/40 transition-all"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="text-sm sm:text-base font-semibold break-words">
-                            {item.title || item.school}
-                          </div>
-                          <div className="text-xs sm:text-sm text-muted-foreground">
-                            {item.subtitle || "Select for details"}
-                          </div>
-                        </div>
-                        <Terminal className="h-4 w-4 text-primary" />
-                      </div>
-                    </motion.button>
-                  ))}
-                </div>
-              </Card>
-            </motion.div>
-          </AnimatePresence>
-        </motion.section>
-      </div>
-
+      {/* ── terminal dialog ────────────────────────── */}
       <Dialog open={!!selectedItem} onOpenChange={(open) => !open && closeTerminal()}>
         <DialogContent
           showCloseButton={false}
-          className="!fixed !top-1/2 !left-1/2 !-translate-x-1/2 !-translate-y-1/2 relative overflow-hidden bg-black text-green-400 border border-green-500/40 w-[92vw] h-[82vh] sm:w-[85vw] sm:h-[80vh] lg:w-[80vw] lg:h-[80vh] max-w-none sm:max-w-none shadow-[0_0_40px_rgba(34,197,94,0.3)] before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_20%_10%,rgba(34,197,94,0.15),transparent_55%)] before:opacity-70 before:pointer-events-none font-mono p-0"
+          className="fixed! top-1/2! left-1/2! -translate-x-1/2! -translate-y-1/2! overflow-hidden bg-black text-green-400 border border-green-500/40 w-[92vw] h-[82vh] sm:w-[85vw] sm:h-[80vh] lg:w-[75vw] lg:h-[78vh] max-w-none sm:max-w-none shadow-[0_0_60px_rgba(34,197,94,0.2)] before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_20%_10%,rgba(34,197,94,0.12),transparent_55%)] before:opacity-70 before:pointer-events-none font-mono p-0"
         >
           <div className="relative z-10 flex h-full flex-col p-4 sm:p-6">
+            {/* terminal chrome */}
             <div className="flex items-center justify-between pb-4 border-b border-green-500/30">
-              <div className="flex items-center gap-2 text-green-200">
-                <Terminal className="h-4 w-4" />
-                <DialogTitle className="text-sm font-mono uppercase tracking-widest text-green-200">
-                  {terminalHeader}
-                </DialogTitle>
+              <div className="flex items-center gap-3">
+                <div className="flex gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-red-500/70" />
+                  <div className="w-3 h-3 rounded-full bg-yellow-500/70" />
+                  <div className="w-3 h-3 rounded-full bg-green-500/70" />
+                </div>
+                <div className="flex items-center gap-2 text-green-200">
+                  <Terminal className="h-3.5 w-3.5" />
+                  <DialogTitle className="text-xs font-mono uppercase tracking-widest text-green-200">
+                    {terminalHeader}
+                  </DialogTitle>
+                </div>
               </div>
               <button
                 onClick={closeTerminal}
-                className="inline-flex items-center gap-1 text-xs font-mono uppercase tracking-widest text-green-200 hover:text-white"
+                className="inline-flex items-center gap-1 text-xs font-mono uppercase tracking-widest text-green-200 hover:text-white transition-colors"
               >
-                <X className="h-4 w-4" /> Exit
+                <X className="h-3.5 w-3.5" /> Exit
               </button>
             </div>
 
-            <div className="mt-4 flex-1 overflow-y-auto space-y-2 text-xs sm:text-sm break-words">
+            {/* terminal body */}
+            <div className="mt-4 flex-1 overflow-y-auto space-y-2 text-xs sm:text-sm wrap-break-word">
               {selectedItem && (
                 <>
                   {selectedItem.kind === "experience" && (
@@ -521,16 +907,6 @@ export default function Home() {
                       {selectedItem.location && (
                         <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ ...spring, delay: 0.06 }}>
                           <span className="text-green-300">LOCATION:</span> {selectedItem.location}
-                        </motion.div>
-                      )}
-                      {selectedItem.date && (
-                        <motion.div
-                          initial={{ opacity: 0, x: -8 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ ...spring, delay: 0.08 }}
-                          className="sr-only"
-                        >
-                          <span className="text-green-300">DATES:</span> {selectedItem.date}
                         </motion.div>
                       )}
                     </>
@@ -566,13 +942,7 @@ export default function Home() {
                     </>
                   )}
 
-                  {selectedItem.stack && selectedItem.kind === "experience" && (
-                    <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ ...spring, delay: 0.08 }}>
-                      <span className="text-green-300">STACK:</span> {selectedItem.stack.join(", ")}
-                    </motion.div>
-                  )}
-
-                  {selectedItem.stack && selectedItem.kind === "projects" && (
+                  {selectedItem.stack && (selectedItem.kind === "experience" || selectedItem.kind === "projects") && (
                     <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ ...spring, delay: 0.08 }}>
                       <span className="text-green-300">STACK:</span> {selectedItem.stack.join(", ")}
                     </motion.div>
@@ -591,24 +961,25 @@ export default function Home() {
                                 : "DETAILS:"}
                         </span>
                       </motion.div>
-                      {(selectedItem.logs || []).map((log: string, index: number) => (
+                      {selectedItem.logs.map((log: string, i: number) => (
                         <motion.div
-                          key={`${selectedItem.title || selectedItem.school}-${index}`}
+                          key={`${selectedItem.title || selectedItem.school}-${i}`}
                           initial={{ opacity: 0, x: -8 }}
                           animate={{ opacity: 1, x: 0 }}
-                          transition={{ ...spring, delay: 0.14 + index * 0.05 }}
+                          transition={{ ...spring, delay: 0.14 + i * 0.05 }}
                         >
                           &gt; {log}
                         </motion.div>
                       ))}
                     </div>
                   )}
+
+                  {/* commands */}
                   <div className="mt-6 space-y-2">
                     <div className="text-green-300 text-xs">COMMANDS:</div>
                     <div className="space-y-1 text-xs">
                       {selectedItem.kind === "projects" && selectedItem.repo && (
                         <div
-                          data-cursor="block"
                           onClick={() => setTerminalSelection("github")}
                           className={`cursor-pointer flex items-center gap-2 ${
                             terminalSelection === "github" ? "text-white" : "text-green-200/80"
@@ -616,13 +987,14 @@ export default function Home() {
                         >
                           <span className="text-green-400">&gt;</span>
                           <span>github</span>
-                        {terminalSelection === "github" && (
-                          <span className="ml-1 inline-block animate-pulse text-green-400">▋</span>
-                        )}
+                          {terminalSelection === "github" && (
+                            <span className="ml-1 inline-block animate-pulse text-green-400">
+                              ▋
+                            </span>
+                          )}
                         </div>
                       )}
                       <div
-                        data-cursor="block"
                         onClick={() => setTerminalSelection("exit")}
                         className={`cursor-pointer flex items-center gap-2 ${
                           terminalSelection === "exit" ? "text-white" : "text-green-200/80"
@@ -631,17 +1003,19 @@ export default function Home() {
                         <span className="text-green-400">&gt;</span>
                         <span>exit</span>
                         {terminalSelection === "exit" && (
-                          <span className="ml-1 inline-block animate-pulse text-green-400">▋</span>
+                          <span className="ml-1 inline-block animate-pulse text-green-400">
+                            ▋
+                          </span>
                         )}
                       </div>
                     </div>
-                    <div className="text-[10px] text-green-200/70">
+                    <div className="text-[10px] text-green-200/60">
                       Use arrow keys to move, Enter to run.
                     </div>
                     {terminalMessages.length > 0 && (
                       <div className="mt-3 space-y-1 text-green-200/80 text-xs">
-                        {terminalMessages.map((msg, index) => (
-                          <div key={`terminal-msg-${index}`}>{msg}</div>
+                        {terminalMessages.map((msg, i) => (
+                          <div key={`terminal-msg-${i}`}>{msg}</div>
                         ))}
                       </div>
                     )}

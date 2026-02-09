@@ -13,10 +13,10 @@ import Link from "next/link";
 import {
   FileText, Github, Linkedin, Mail, Terminal, X,
   Briefcase, GraduationCap, Code2,
-  Sparkles, Building2, ChevronDown, Trophy,
+  Sparkles, Building2, ChevronDown, Trophy, ArrowUp, Menu,
 } from "lucide-react";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode, type MouseEvent as ReactMouseEvent } from "react";
+import { AnimatePresence, motion, useMotionValue, useSpring, useTransform, useInView, useScroll } from "framer-motion";
 
 /* ── constants ─────────────────────────────────────────── */
 
@@ -30,6 +30,19 @@ const fadeUp = {
   hidden: { opacity: 0, y: 24 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
 };
+
+const NAV_SECTIONS = [
+  { id: "experience", label: "Experience" },
+  { id: "projects", label: "Projects" },
+  { id: "skills", label: "Skills" },
+  { id: "education", label: "Education" },
+  { id: "chat", label: "AI Chat" },
+] as const;
+
+const TYPED_WORDS = ["distributed systems", "cloud platforms", "full-stack products", "scalable APIs"];
+const TYPED_SPEED = 80;
+const TYPED_DELETE_SPEED = 40;
+const TYPED_PAUSE = 1800;
 
 /* ── helpers ───────────────────────────────────────────── */
 
@@ -47,6 +60,46 @@ const formatDateRange = (date?: { start?: string; end?: string }) => {
   return a || b || "";
 };
 
+/* ── text scramble hook ─────────────────────────────────── */
+
+const SCRAMBLE_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%&";
+
+function useScrambleText(text: string, trigger: boolean, speed = 30) {
+  const [display, setDisplay] = useState(text);
+  const hasRun = useRef(false);
+
+  useEffect(() => {
+    if (!trigger || hasRun.current) return;
+    hasRun.current = true;
+    let frame: number;
+    let iteration = 0;
+    const maxIterations = text.length;
+
+    const scramble = () => {
+      setDisplay(
+        text
+          .split("")
+          .map((char, i) => {
+            if (char === " ") return " ";
+            if (i < iteration) return text[i];
+            return SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)];
+          })
+          .join(""),
+      );
+      iteration += 1 / 3;
+      if (iteration <= maxIterations) {
+        frame = window.setTimeout(scramble, speed);
+      } else {
+        setDisplay(text);
+      }
+    };
+    scramble();
+    return () => clearTimeout(frame);
+  }, [trigger, text, speed]);
+
+  return display;
+}
+
 /* ── section header ────────────────────────────────────── */
 
 function SectionHeader({
@@ -58,8 +111,13 @@ function SectionHeader({
   title: string;
   subtitle: string;
 }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-80px" });
+  const scrambled = useScrambleText(title, inView);
+
   return (
     <motion.div
+      ref={ref}
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-80px" }}
@@ -70,9 +128,165 @@ function SectionHeader({
         {icon}
         <span className="uppercase">{subtitle}</span>
       </div>
-      <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">{title}</h2>
+      <h2
+        className="text-3xl sm:text-4xl font-bold tracking-tight"
+        style={{
+          background: "linear-gradient(to right, var(--foreground) 30%, var(--primary) 100%)",
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "transparent",
+          backgroundClip: "text",
+        }}
+      >
+        {scrambled}
+      </h2>
     </motion.div>
   );
+}
+
+/* ── section divider ───────────────────────────────────── */
+
+function SectionDivider() {
+  return (
+    <div className="max-w-6xl mx-auto px-6">
+      <div
+        className="h-[1px] w-full"
+        style={{
+          background:
+            "linear-gradient(to right, transparent 0%, var(--border) 30%, var(--border) 70%, transparent 100%)",
+          opacity: 0.5,
+        }}
+      />
+    </div>
+  );
+}
+
+/* ── glow card ─────────────────────────────────────────── */
+
+function GlowCard({ children, className }: { children: ReactNode; className?: string }) {
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const handleMouse = useCallback((e: ReactMouseEvent) => {
+    const el = cardRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    el.style.setProperty("--glow-x", `${e.clientX - rect.left}px`);
+    el.style.setProperty("--glow-y", `${e.clientY - rect.top}px`);
+  }, []);
+
+  return (
+    <div
+      ref={cardRef}
+      onMouseMove={handleMouse}
+      className={`glow-card ${className ?? ""}`}
+    >
+      {children}
+    </div>
+  );
+}
+
+/* ── animated counter ──────────────────────────────────── */
+
+function AnimatedCounter({ value, label }: { value: string; label: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-60px" });
+  const numericMatch = value.match(/^(\d+)(.*)$/);
+  const target = numericMatch ? parseInt(numericMatch[1], 10) : 0;
+  const suffix = numericMatch ? numericMatch[2] : value;
+  const isNumeric = !!numericMatch;
+
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    if (!inView || !isNumeric) return;
+    let frame: number;
+    const duration = 1200;
+    const start = performance.now();
+    const animate = (now: number) => {
+      const progress = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+      setCount(Math.floor(eased * target));
+      if (progress < 1) frame = requestAnimationFrame(animate);
+    };
+    frame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frame);
+  }, [inView, target, isNumeric]);
+
+  return (
+    <div ref={ref} className="px-6 sm:px-10 text-center">
+      <div className="text-xl sm:text-2xl font-bold">
+        {isNumeric ? `${count}${suffix}` : value}
+      </div>
+      <div className="text-xs sm:text-sm text-muted-foreground">{label}</div>
+    </div>
+  );
+}
+
+/* ── 3D tilt card ──────────────────────────────────────── */
+
+function TiltCard({ children, className }: { children: ReactNode; className?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const x = useMotionValue(0.5);
+  const y = useMotionValue(0.5);
+
+  const rotateX = useSpring(useTransform(y, [0, 1], [6, -6]), { stiffness: 300, damping: 30 });
+  const rotateY = useSpring(useTransform(x, [0, 1], [-6, 6]), { stiffness: 300, damping: 30 });
+
+  const handleMouse = (e: ReactMouseEvent) => {
+    const el = ref.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    x.set((e.clientX - rect.left) / rect.width);
+    y.set((e.clientY - rect.top) / rect.height);
+  };
+
+  const handleLeave = () => {
+    x.set(0.5);
+    y.set(0.5);
+  };
+
+  return (
+    <motion.div
+      ref={ref}
+      onMouseMove={handleMouse}
+      onMouseLeave={handleLeave}
+      style={{ rotateX, rotateY, transformPerspective: 800 }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+/* ── typed text ────────────────────────────────────────── */
+
+function useTypedText(words: string[], speed = 80, deleteSpeed = 40, pause = 1800) {
+  const [text, setText] = useState("");
+  const [wordIdx, setWordIdx] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    const word = words[wordIdx];
+    const timer = setTimeout(
+      () => {
+        if (!isDeleting) {
+          setText(word.slice(0, text.length + 1));
+          if (text.length + 1 === word.length) {
+            setTimeout(() => setIsDeleting(true), pause);
+          }
+        } else {
+          setText(word.slice(0, text.length - 1));
+          if (text.length - 1 === 0) {
+            setIsDeleting(false);
+            setWordIdx((prev) => (prev + 1) % words.length);
+          }
+        }
+      },
+      isDeleting ? deleteSpeed : speed,
+    );
+    return () => clearTimeout(timer);
+  }, [text, wordIdx, isDeleting, words, speed, deleteSpeed, pause]);
+
+  return text;
 }
 
 /* ── page ──────────────────────────────────────────────── */
@@ -82,6 +296,35 @@ export default function Home() {
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
   const [terminalSelection, setTerminalSelection] = useState<"github" | "exit" | null>(null);
   const [terminalMessages, setTerminalMessages] = useState<string[]>([]);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  /* scroll progress */
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, { stiffness: 200, damping: 40, restDelta: 0.001 });
+  const backToTopOpacity = useTransform(scrollYProgress, [0, 0.08, 0.1], [0, 0, 1]);
+
+  /* active section tracking */
+  const [activeSection, setActiveSection] = useState("");
+
+  useEffect(() => {
+    const sectionIds = NAV_SECTIONS.map((s) => s.id);
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) setActiveSection(entry.target.id);
+        }
+      },
+      { rootMargin: "-40% 0px -55% 0px" },
+    );
+    for (const id of sectionIds) {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    }
+    return () => observer.disconnect();
+  }, []);
+
+  /* typed text */
+  const typedText = useTypedText(TYPED_WORDS, TYPED_SPEED, TYPED_DELETE_SPEED, TYPED_PAUSE);
 
   /* client log */
   const sendClientLog = (event: string, extra?: Record<string, unknown>) => {
@@ -287,14 +530,118 @@ export default function Home() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [selectedItem, terminalSelection]);
 
+  /* ── cursor spotlight ─────────────────────────────── */
+  const spotlightRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (spotlightRef.current) {
+      spotlightRef.current.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
+      spotlightRef.current.style.opacity = "1";
+    }
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    if (spotlightRef.current) {
+      spotlightRef.current.style.opacity = "0";
+    }
+  }, []);
+
   /* ── render ────────────────────────────────────────── */
 
+  if (!data) {
+    return (
+      <main className="min-h-screen text-foreground overflow-x-hidden isolate">
+        <div className="bg-mesh">
+          <div className="bg-mesh__grid" />
+          <div className="bg-mesh__noise" />
+          <div className="bg-mesh__vignette" />
+        </div>
+        <nav className="sticky top-0 z-50 border-b border-border/40 bg-background/70 backdrop-blur-xl">
+          <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+            <span className="font-bold text-lg tracking-tight select-none">NP<span className="text-primary">.</span></span>
+            <div className="flex items-center gap-2">
+              <div className="skeleton w-8 h-8 rounded-lg" />
+              <div className="skeleton w-8 h-8 rounded-lg" />
+              <div className="skeleton w-8 h-8 rounded-lg" />
+            </div>
+          </div>
+        </nav>
+        <div className="max-w-5xl mx-auto px-6 space-y-24 py-16">
+          {/* Hero skeleton */}
+          <div className="flex flex-col items-center gap-6 pt-16">
+            <div className="skeleton w-32 h-32 rounded-full" />
+            <div className="skeleton w-64 h-10 rounded-xl" />
+            <div className="skeleton w-80 h-5 rounded-lg max-w-full" />
+            <div className="flex gap-3 mt-2">
+              <div className="skeleton w-28 h-10 rounded-full" />
+              <div className="skeleton w-28 h-10 rounded-full" />
+            </div>
+          </div>
+          {/* Experience skeleton */}
+          <div className="space-y-6">
+            <div className="skeleton w-48 h-8 rounded-lg" />
+            <div className="space-y-4 pl-8">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="skeleton rounded-2xl" style={{ height: 144 }} />
+              ))}
+            </div>
+          </div>
+          {/* Projects skeleton */}
+          <div className="space-y-6">
+            <div className="skeleton w-36 h-8 rounded-lg" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="skeleton rounded-2xl" style={{ height: 176 }} />
+              ))}
+            </div>
+          </div>
+          {/* Skills skeleton */}
+          <div className="space-y-6">
+            <div className="skeleton w-32 h-8 rounded-lg" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="skeleton rounded-2xl" style={{ height: 128 }} />
+              ))}
+            </div>
+          </div>
+          {/* Education skeleton */}
+          <div className="space-y-6">
+            <div className="skeleton w-40 h-8 rounded-lg" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {Array.from({ length: 2 }).map((_, i) => (
+                <div key={i} className="skeleton rounded-2xl" style={{ height: 144 }} />
+              ))}
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   return (
-    <main className="min-h-screen bg-background text-foreground overflow-x-hidden">
-      {/* ── background effects ─────────────────────── */}
-      <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle,#d1d5db_1px,transparent_1px)] dark:bg-[radial-gradient(circle,rgba(255,255,255,0.06)_1px,transparent_1px)] bg-size-[28px_28px] pointer-events-none" />
-      <div className="fixed -top-48 -right-48 w-125 h-125 rounded-full bg-primary/8 blur-[140px] pointer-events-none -z-10" />
-      <div className="fixed -bottom-48 -left-48 w-125 h-125 rounded-full bg-accent/8 blur-[140px] pointer-events-none -z-10" />
+    <main
+      className="min-h-screen text-foreground overflow-x-hidden isolate"
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+    >
+      {/* ── animated mesh background ───────────────── */}
+      <div className="bg-mesh">
+        <div className="bg-mesh__grid" />
+        <div ref={spotlightRef} className="bg-mesh__spotlight" />
+        <div className="bg-mesh__orb bg-mesh__orb--1" />
+        <div className="bg-mesh__orb bg-mesh__orb--2" />
+        <div className="bg-mesh__orb bg-mesh__orb--3" />
+        <div className="bg-mesh__orb bg-mesh__orb--4" />
+        <div className="bg-mesh__beam" />
+        <div className="bg-mesh__noise" />
+        <div className="bg-mesh__vignette" />
+      </div>
+
+      {/* ── scroll progress bar ────────────────────── */}
+      <motion.div
+        style={{ scaleX }}
+        className="fixed top-0 left-0 right-0 h-[2px] bg-linear-to-r from-primary via-primary/80 to-accent origin-left z-[60]"
+      />
 
       {/* ── sticky navbar ──────────────────────────── */}
       <nav className="sticky top-0 z-50 border-b border-border/40 bg-background/70 backdrop-blur-xl">
@@ -302,6 +649,31 @@ export default function Home() {
           <Link href="/" className="font-bold text-lg tracking-tight select-none">
             NP<span className="text-primary">.</span>
           </Link>
+
+          {/* section links — hidden on mobile */}
+          <div className="hidden md:flex items-center gap-1 relative">
+            {NAV_SECTIONS.map((s) => (
+              <a
+                key={s.id}
+                href={`#${s.id}`}
+                className={`relative px-3 py-1.5 rounded-lg text-sm transition-colors z-[1] ${
+                  activeSection === s.id
+                    ? "text-primary font-medium"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                }`}
+              >
+                {activeSection === s.id && (
+                  <motion.span
+                    layoutId="nav-pill"
+                    className="absolute inset-0 rounded-lg bg-primary/10"
+                    transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                  />
+                )}
+                <span className="relative z-[1]">{s.label}</span>
+              </a>
+            ))}
+          </div>
+
           <div className="flex items-center gap-1">
             {[
               { href: "https://www.linkedin.com/in/niharpatel4", icon: <Linkedin className="w-4 h-4" />, label: "LinkedIn" },
@@ -321,24 +693,61 @@ export default function Home() {
             ))}
             <div className="w-px h-5 bg-border mx-1" />
             <ThemeToggle />
+            <button
+              className="md:hidden p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+              onClick={() => setMobileNavOpen((p) => !p)}
+              aria-label="Toggle menu"
+            >
+              {mobileNavOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+            </button>
           </div>
         </div>
+        <AnimatePresence>
+          {mobileNavOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+              className="md:hidden border-t border-border/40 overflow-hidden"
+            >
+              <div className="px-6 py-3 flex flex-col gap-1">
+                {NAV_SECTIONS.map((s) => (
+                  <a
+                    key={s.id}
+                    href={`#${s.id}`}
+                    onClick={() => setMobileNavOpen(false)}
+                    className={`px-3 py-2 rounded-lg text-sm transition-colors ${
+                      activeSection === s.id
+                        ? "text-primary font-medium bg-primary/10"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                    }`}
+                  >
+                    {s.label}
+                  </a>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </nav>
 
       {/* ── hero section ───────────────────────────── */}
       <section className="relative flex items-center justify-center min-h-[88vh] px-6">
         <div className="max-w-4xl mx-auto w-full">
           <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: { opacity: 0 },
+              visible: { opacity: 1, transition: { staggerChildren: 0.12, delayChildren: 0.1 } },
+            }}
             className="flex flex-col items-center text-center space-y-8"
           >
             {/* availability badge */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.15 }}
+              variants={{ hidden: { opacity: 0, y: 20, scale: 0.9 }, visible: { opacity: 1, y: 0, scale: 1 } }}
+              transition={{ duration: 0.5 }}
             >
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-green-500/30 bg-green-500/10 text-green-600 dark:text-green-400 text-sm font-medium">
                 <span className="relative flex h-2 w-2">
@@ -351,52 +760,52 @@ export default function Home() {
 
             {/* avatar */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.1, ...spring }}
+              variants={{ hidden: { opacity: 0, scale: 0.8 }, visible: { opacity: 1, scale: 1 } }}
+              transition={{ ...spring }}
             >
-              <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full overflow-hidden ring-[3px] ring-primary/20 ring-offset-4 ring-offset-background shadow-2xl shadow-primary/10 bg-card">
-                <Image
-                  src="/me.png"
-                  alt="Nihar Patel"
-                  fill
-                  className="object-cover"
-                  sizes="128px"
-                  priority
-                />
+              <div className="avatar-ring-wrapper relative w-28 h-28 sm:w-32 sm:h-32">
+                <div className="avatar-ring-glow" />
+                <div className="relative w-full h-full rounded-full overflow-hidden shadow-2xl shadow-primary/10 bg-card">
+                  <Image
+                    src="/me.png"
+                    alt="Nihar Patel"
+                    fill
+                    className="object-cover"
+                    sizes="128px"
+                    priority
+                  />
+                </div>
               </div>
             </motion.div>
 
             {/* headline */}
-            <div className="space-y-4">
-              <motion.h1
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.18 }}
+            <motion.div
+              variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+              transition={{ duration: 0.5 }}
+              className="space-y-4"
+            >
+              <h1
                 className="text-5xl sm:text-6xl md:text-7xl font-bold tracking-tight leading-[1.1]"
               >
                 <span className="bg-linear-to-br from-foreground via-foreground/90 to-muted-foreground/70 bg-clip-text text-transparent">
                   Nihar Patel
                 </span>
-              </motion.h1>
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.28 }}
-                className="text-lg sm:text-xl text-muted-foreground max-w-xl mx-auto leading-relaxed"
+              </h1>
+              <p
+                className="text-lg sm:text-xl text-muted-foreground max-w-xl mx-auto leading-relaxed h-14 sm:h-auto"
               >
                 Software engineer building{" "}
-                <span className="text-foreground font-medium">distributed systems</span>,{" "}
-                <span className="text-foreground font-medium">cloud platforms</span>, &amp;{" "}
-                <span className="text-foreground font-medium">full-stack products</span>
-              </motion.p>
-            </div>
+                <span className="text-foreground font-medium">
+                  {typedText}
+                  <span className="animate-pulse text-primary">|</span>
+                </span>
+              </p>
+            </motion.div>
 
             {/* cta buttons */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.38 }}
+              variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+              transition={{ duration: 0.5 }}
               className="flex flex-wrap justify-center gap-3"
             >
               <Link
@@ -416,30 +825,10 @@ export default function Home() {
               </Link>
             </motion.div>
 
-            {/* stats */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.48 }}
-              className="grid grid-cols-3 divide-x divide-border pt-2"
-            >
-              {[
-                { value: "2+", label: "Years Exp." },
-                { value: "7+", label: "Projects" },
-                { value: "MS", label: "@ SJSU" },
-              ].map((s) => (
-                <div key={s.label} className="px-6 sm:px-10 text-center">
-                  <div className="text-xl sm:text-2xl font-bold">{s.value}</div>
-                  <div className="text-xs sm:text-sm text-muted-foreground">{s.label}</div>
-                </div>
-              ))}
-            </motion.div>
-
             {/* scroll cue */}
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1.2 }}
+              variants={{ hidden: { opacity: 0 }, visible: { opacity: 1 } }}
+              transition={{ duration: 0.5 }}
               className="pt-6"
             >
               <motion.div
@@ -453,6 +842,8 @@ export default function Home() {
         </div>
       </section>
 
+      <SectionDivider />
+
       {/* ── experience ─────────────────────────────── */}
       <section id="experience" className="py-24 px-6">
         <div className="max-w-5xl mx-auto">
@@ -463,7 +854,16 @@ export default function Home() {
           />
 
           {/* timeline */}
-          <div className="relative mt-14 pl-8 sm:pl-10 border-l-2 border-border/50 space-y-10">
+          <div className="relative mt-14 pl-8 sm:pl-10 space-y-10">
+            {/* animated timeline line */}
+            <motion.div
+              className="absolute left-0 top-0 w-[2px] bg-linear-to-b from-primary/60 via-primary/30 to-border/30 origin-top"
+              initial={{ scaleY: 0 }}
+              whileInView={{ scaleY: 1 }}
+              viewport={{ once: true, margin: "-10% 0px -10% 0px" }}
+              transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+              style={{ height: "100%" }}
+            />
             {experienceItems.map((item: any, idx: number) => (
               <motion.div
                 key={item.id}
@@ -480,6 +880,8 @@ export default function Home() {
                   onClick={() => openTerminal(item)}
                   className="w-full text-left group"
                 >
+                  <TiltCard>
+                  <GlowCard>
                   <div className="p-5 sm:p-6 rounded-2xl border border-border/50 bg-card/60 backdrop-blur-sm hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-3">
                       <div className="flex items-center gap-3">
@@ -527,12 +929,16 @@ export default function Home() {
                       <span>Click to open terminal</span>
                     </div>
                   </div>
+                  </GlowCard>
+                  </TiltCard>
                 </button>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
+
+      <SectionDivider />
 
       {/* ── projects ───────────────────────────────── */}
       <section id="projects" className="py-24 px-6">
@@ -560,6 +966,8 @@ export default function Home() {
                   onClick={() => openTerminal(item)}
                   className="w-full h-full text-left group"
                 >
+                  <TiltCard className="h-full">
+                  <GlowCard className="h-full">
                   <div className="relative h-full p-5 sm:p-6 rounded-2xl border border-border/50 bg-card/60 backdrop-blur-sm hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 flex flex-col overflow-hidden">
                     {/* top glow line */}
                     <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-primary/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -592,12 +1000,16 @@ export default function Home() {
                       )}
                     </div>
                   </div>
+                  </GlowCard>
+                  </TiltCard>
                 </button>
               </motion.div>
             ))}
           </motion.div>
         </div>
       </section>
+
+      <SectionDivider />
 
       {/* ── skills ─────────────────────────────────── */}
       <section id="skills" className="py-24 px-6">
@@ -615,10 +1027,13 @@ export default function Home() {
             viewport={{ once: true, margin: "-60px" }}
             className="mt-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
           >
-            {skillItems.map((group: any) => (
+            {skillItems.map((group: any, gIdx: number) => (
               <motion.div
                 key={group.id}
-                variants={fadeUp}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ delay: gIdx * 0.1, duration: 0.5 }}
                 className="p-5 rounded-2xl border border-border/50 bg-card/60 backdrop-blur-sm hover:border-primary/20 transition-colors"
               >
                 <h3 className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">
@@ -626,13 +1041,27 @@ export default function Home() {
                 </h3>
                 <div className="flex flex-wrap gap-1.5">
                   {group.logs.map((skill: string, i: number) => (
-                    <Badge
+                    <motion.span
                       key={i}
-                      variant="outline"
-                      className="text-[11px] font-mono bg-muted/40 border-border/40"
+                      initial={{ opacity: 0, scale: 0.5 }}
+                      whileInView={{ opacity: 1, scale: 1 }}
+                      viewport={{ once: true, margin: "-30px" }}
+                      transition={{
+                        delay: gIdx * 0.1 + i * 0.04,
+                        duration: 0.35,
+                        type: "spring",
+                        stiffness: 400,
+                        damping: 15,
+                      }}
+                      className="inline-block"
                     >
-                      {skill}
-                    </Badge>
+                      <Badge
+                        variant="outline"
+                        className="text-[11px] font-mono bg-muted/40 border-border/40"
+                      >
+                        {skill}
+                      </Badge>
+                    </motion.span>
                   ))}
                 </div>
               </motion.div>
@@ -640,6 +1069,8 @@ export default function Home() {
           </motion.div>
         </div>
       </section>
+
+      <SectionDivider />
 
       {/* ── education ──────────────────────────────── */}
       <section id="education" className="py-24 px-6">
@@ -955,6 +1386,16 @@ export default function Home() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* ── back-to-top button ─────────────────────── */}
+      <motion.button
+        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        style={{ opacity: backToTopOpacity }}
+        className="fixed bottom-6 right-6 z-50 p-3 rounded-full border border-border/50 bg-card/80 backdrop-blur-md text-muted-foreground hover:text-primary hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 pointer-events-auto"
+        aria-label="Back to top"
+      >
+        <ArrowUp className="w-4 h-4" />
+      </motion.button>
     </main>
   );
 }

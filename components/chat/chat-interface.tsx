@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { ArrowRight, Sparkles, User, FileText, Briefcase, ChevronDown, ChevronUp, Layers, Mail, MoreHorizontal } from "lucide-react"
+import { ArrowRight, Sparkles, User, FileText, Briefcase, ChevronDown, ChevronUp, Layers, Mail, MoreHorizontal, MessageSquare } from "lucide-react"
 import { MessageBubble } from "./message-bubble"
 import { ReasoningTerminal } from "./reasoning-terminal"
 import Image from "next/image"
@@ -121,8 +121,26 @@ export function ChatInterface({ initialMessage, isFullScreen = false }: { initia
                     {/* Added max-w-3xl to keep text readable on wide screens */}
 
                     {messages.length === 0 && !isLoading && (
-                        <div className="text-center text-muted-foreground text-sm mt-6">
-                            <p>I'm ready to answer questions about my work.</p>
+                        <div className="flex flex-col items-center justify-center text-center mt-8 space-y-4">
+                            <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-primary/20 shadow-lg bg-card">
+                                <Image
+                                    src="/me.png"
+                                    alt="Nihar"
+                                    fill
+                                    className="object-cover"
+                                    sizes="64px"
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <h3 className="text-base font-semibold text-foreground">Chat with Nihar's AI</h3>
+                                <p className="text-sm text-muted-foreground max-w-xs">
+                                    Ask about my experience, projects, skills, or anything else.
+                                </p>
+                            </div>
+                            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/60">
+                                <MessageSquare className="w-3 h-3" />
+                                <span>Powered by AI &middot; responses may take a moment</span>
+                            </div>
                         </div>
                     )}
 
@@ -168,10 +186,13 @@ export function ChatInterface({ initialMessage, isFullScreen = false }: { initia
 
                     {/* Loading State (if no thinking yet) */}
                     {isLoading && messages[messages.length - 1]?.role === 'user' && !currentThinking && (
-                        <div className="mt-2 ml-4 max-w-[85%]">
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground animate-pulse">
-                                <Sparkles className="w-3 h-3" />
-                                <span>Developing thought process...</span>
+                        <div className="flex justify-start">
+                            <div className="bg-muted rounded-2xl rounded-tl-sm border border-border/50 px-5 py-4 shadow-sm">
+                                <div className="flex items-center gap-1.5">
+                                    <span className="w-2 h-2 rounded-full bg-primary/60 animate-bounce [animation-delay:0ms]" />
+                                    <span className="w-2 h-2 rounded-full bg-primary/60 animate-bounce [animation-delay:150ms]" />
+                                    <span className="w-2 h-2 rounded-full bg-primary/60 animate-bounce [animation-delay:300ms]" />
+                                </div>
                             </div>
                         </div>
                     )}
@@ -215,12 +236,14 @@ export function ChatInterface({ initialMessage, isFullScreen = false }: { initia
                     )}
 
                     <form onSubmit={handleSubmit} className="relative group">
-                        <Input
-                            value={input}
-                            onChange={handleInputChange}
-                            placeholder="Ask me anything"
-                            className="pl-6 pr-14 h-14 rounded-[32px] border-2 border-border/60 hover:border-border focus-visible:border-primary/60 bg-muted/50 hover:bg-muted/80 focus-visible:ring-0 focus-visible:bg-muted text-lg shadow-sm transition-all"
-                        />
+                        <div className="chat-input-glow rounded-[32px]">
+                            <Input
+                                value={input}
+                                onChange={handleInputChange}
+                                placeholder="Ask me anything"
+                                className="pl-6 pr-14 h-14 rounded-[32px] border-2 border-border/60 hover:border-border focus-visible:border-primary/60 bg-muted/50 hover:bg-muted/80 focus-visible:ring-0 focus-visible:bg-muted text-lg shadow-sm transition-all"
+                            />
+                        </div>
                         <Button
                             type="submit"
                             size="icon"

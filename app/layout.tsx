@@ -14,13 +14,38 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Nihar Patel",
-  description: "Nihar Patel — Software Engineer Portfolio.",
-  icons: {
-    icon: "/favicon.ico",
-    apple: "/favicon.ico",
-    shortcut: "/favicon.ico",
+  title: "Nihar Patel — Software Engineer",
+  description:
+    "Software engineer specializing in distributed systems, cloud infrastructure, and high-throughput backend services. MS in Software Engineering at San Jose State.",
+  keywords: [
+    "Nihar Patel",
+    "Software Engineer",
+    "Distributed Systems",
+    "Cloud Infrastructure",
+    "Backend",
+    "Java",
+    "Go",
+    "C++",
+    "GCP",
+    "Kubernetes",
+  ],
+  authors: [{ name: "Nihar Patel" }],
+  openGraph: {
+    title: "Nihar Patel — Software Engineer",
+    description:
+      "Building production-grade distributed systems, cloud-native tooling, and event-driven data pipelines.",
+    url: "https://niharpatel.dev",
+    siteName: "Nihar Patel",
+    type: "website",
+    locale: "en_US",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "Nihar Patel — Software Engineer",
+    description:
+      "Distributed systems · Cloud infrastructure · High-throughput backend services",
+  },
+  metadataBase: new URL("https://niharpatel.dev"),
 };
 
 export default function RootLayout({
@@ -37,7 +62,6 @@ export default function RootLayout({
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
-          disableTransitionOnChange
         >
           {children}
         </ThemeProvider>

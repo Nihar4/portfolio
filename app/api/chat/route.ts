@@ -1,7 +1,7 @@
 import { OpenAI } from "openai";
 import fs from "fs";
 import path from "path";
-import { appendLog } from "@/lib/log-store";
+import { appendLog, getVisitorId, generateVisitorId } from "@/lib/log-store";
 
 export const runtime = "nodejs";
 
@@ -28,6 +28,10 @@ function loadAllPortfolioData() {
 }
 
 export async function POST(req: Request) {
+    let visitorId = getVisitorId(req.headers);
+    const isNewVisitor = !visitorId;
+    if (!visitorId) visitorId = generateVisitorId();
+
     try {
         const { messages } = await req.json();
         const latestUserMessage =
@@ -44,7 +48,7 @@ export async function POST(req: Request) {
                 typeof latestUserMessage === "string"
                     ? latestUserMessage.slice(0, 2000)
                     : undefined,
-        }).catch(() => {});
+        }, visitorId).catch(() => {});
 
         const allData = loadAllPortfolioData();
         const openai = getOpenAIClient();
@@ -173,12 +177,15 @@ ${allData}
         });
 
         // Return standard Response object with correct headers for AI SDK
-        return new Response(stream, {
-            headers: {
-                "Content-Type": "text/plain; charset=utf-8",
-                "X-Vercel-AI-Data-Stream": "v1"
-            }
-        });
+        const responseHeaders: Record<string, string> = {
+            "Content-Type": "text/plain; charset=utf-8",
+            "X-Vercel-AI-Data-Stream": "v1",
+        };
+        if (isNewVisitor) {
+            responseHeaders["Set-Cookie"] =
+                `visitor_id=${visitorId}; Path=/; HttpOnly; SameSite=Lax; Max-Age=31536000`;
+        }
+        return new Response(stream, { headers: responseHeaders });
 
     } catch (error) {
         console.error("Error in chat route:", error);
@@ -189,7 +196,7 @@ ${allData}
                 method: "POST",
                 time: new Date().toISOString(),
                 data: { error: "Internal Server Error" },
-            }).catch(() => {});
+            }, visitorId).catch(() => {});
         } catch {}
         return new Response(JSON.stringify({ error: "Internal Server Error" }), { status: 500 });
     }

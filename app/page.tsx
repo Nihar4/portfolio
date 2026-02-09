@@ -47,14 +47,6 @@ const formatDateRange = (date?: { start?: string; end?: string }) => {
   return a || b || "";
 };
 
-const formatSkillGroup = (title: string, items?: string[]) => ({
-  id: `skill-${title.toLowerCase().replace(/\s+/g, "-")}`,
-  kind: "skills",
-  title,
-  subtitle: "Skill Set",
-  logs: items && items.length > 0 ? items : [],
-});
-
 /* ── section header ────────────────────────────────────── */
 
 function SectionHeader({
@@ -207,97 +199,30 @@ export default function Home() {
 
   const skillItems = useMemo(() => {
     if (!skills) return [];
-    const items: any[] = [];
 
-    items.push(formatSkillGroup("Languages", skills.languages));
+    const categories: { id: string; title: string; key: string }[] = [
+      { id: "skill-languages", title: "Languages", key: "languages" },
+      { id: "skill-backend", title: "Backend", key: "backend" },
+      { id: "skill-cloud", title: "Cloud & DevOps", key: "cloudAndDevOps" },
+      { id: "skill-observability", title: "Observability", key: "observability" },
+      { id: "skill-frontend", title: "Frontend & Mobile", key: "frontendAndMobile" },
+      { id: "skill-ml", title: "ML & AI", key: "mlAndAi" },
+      { id: "skill-systems", title: "Systems", key: "systems" },
+    ];
 
-    const backend = skills.backend || {};
-    items.push({
-      id: "skill-backend",
-      kind: "skills",
-      title: "Backend",
-      subtitle: "Skill Set",
-      logs: [
-        backend.runtime ? `Runtime: ${backend.runtime.join(", ")}` : null,
-        backend.frameworks ? `Frameworks: ${backend.frameworks.join(", ")}` : null,
-        backend.apisAndProtocols ? `APIs & Protocols: ${backend.apisAndProtocols.join(", ")}` : null,
-        backend.messagingAndStreaming ? `Messaging: ${backend.messagingAndStreaming.join(", ")}` : null,
-        backend.caching ? `Caching: ${backend.caching.join(", ")}` : null,
-        backend.datastores ? `Datastores: ${backend.datastores.join(", ")}` : null,
-        backend.vectorAndSearch ? `Vector/Search: ${backend.vectorAndSearch.join(", ")}` : null,
-        backend.auth ? `Auth: ${backend.auth.join(", ")}` : null,
-      ].filter(Boolean),
-    });
-
-    const cloud = skills.cloudAndDevOps || {};
-    items.push({
-      id: "skill-cloud",
-      kind: "skills",
-      title: "Cloud & DevOps",
-      subtitle: "Skill Set",
-      logs: [
-        cloud.cloud ? `Cloud: ${cloud.cloud.join(", ")}` : null,
-        cloud.computeAndServerless ? `Compute: ${cloud.computeAndServerless.join(", ")}` : null,
-        cloud.containers ? `Containers: ${cloud.containers.join(", ")}` : null,
-        cloud.iac ? `IaC: ${cloud.iac.join(", ")}` : null,
-        cloud.cicd ? `CI/CD: ${cloud.cicd.join(", ")}` : null,
-        cloud.edgeAndDelivery ? `Edge: ${cloud.edgeAndDelivery.join(", ")}` : null,
-        cloud.storage ? `Storage: ${cloud.storage.join(", ")}` : null,
-        cloud.loadBalancing ? `Load Balancing: ${cloud.loadBalancing.join(", ")}` : null,
-        cloud.artifactRegistry ? `Registry: ${cloud.artifactRegistry.join(", ")}` : null,
-      ].filter(Boolean),
-    });
-
-    const obs = skills.observability || {};
-    items.push({
-      id: "skill-observability",
-      kind: "skills",
-      title: "Observability",
-      subtitle: "Skill Set",
-      logs: [
-        obs.tools ? `Tools: ${obs.tools.join(", ")}` : null,
-        obs.concepts ? `Concepts: ${obs.concepts.join(", ")}` : null,
-      ].filter(Boolean),
-    });
-
-    const frontend = skills.frontendAndMobile || {};
-    items.push({
-      id: "skill-frontend",
-      kind: "skills",
-      title: "Frontend & Mobile",
-      subtitle: "Skill Set",
-      logs: [
-        frontend.web ? `Web: ${frontend.web.join(", ")}` : null,
-        frontend.mobile ? `Mobile: ${frontend.mobile.join(", ")}` : null,
-      ].filter(Boolean),
-    });
-
-    const ml = skills.mlAndAi || {};
-    items.push({
-      id: "skill-ml",
-      kind: "skills",
-      title: "ML & AI",
-      subtitle: "Skill Set",
-      logs: [
-        ml.frameworks ? `Frameworks: ${ml.frameworks.join(", ")}` : null,
-        ml.systems ? `Systems: ${ml.systems.join(", ")}` : null,
-      ].filter(Boolean),
-    });
-
-    const sys = skills.systems || {};
-    items.push({
-      id: "skill-systems",
-      kind: "skills",
-      title: "Systems",
-      subtitle: "Skill Set",
-      logs: [
-        sys.distributedSystems ? `Distributed: ${sys.distributedSystems.join(", ")}` : null,
-        sys.osAndIsolation ? `Isolation: ${sys.osAndIsolation.join(", ")}` : null,
-        sys.serialization ? `Serialization: ${sys.serialization.join(", ")}` : null,
-      ].filter(Boolean),
-    });
-
-    return items.filter((i) => i.logs?.length > 0);
+    return categories
+      .map((cat) => {
+        const val = skills[cat.key];
+        if (!val) return null;
+        // Support both flat arrays and legacy nested objects
+        const items: string[] = Array.isArray(val)
+          ? val
+          : Object.values(val as Record<string, string[]>).flat();
+        return items.length > 0
+          ? { id: cat.id, kind: "skills", title: cat.title, subtitle: "Skill Set", logs: items }
+          : null;
+      })
+      .filter(Boolean);
   }, [skills]);
 
   /* ── terminal dialog logic ────────────────────────── */
@@ -699,13 +624,17 @@ export default function Home() {
                 <h3 className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">
                   {group.title}
                 </h3>
-                <ul className="space-y-1.5">
-                  {group.logs.map((line: string, i: number) => (
-                    <li key={i} className="text-sm text-muted-foreground leading-relaxed">
-                      {line}
-                    </li>
+                <div className="flex flex-wrap gap-1.5">
+                  {group.logs.map((skill: string, i: number) => (
+                    <Badge
+                      key={i}
+                      variant="outline"
+                      className="text-[11px] font-mono bg-muted/40 border-border/40"
+                    >
+                      {skill}
+                    </Badge>
                   ))}
-                </ul>
+                </div>
               </motion.div>
             ))}
           </motion.div>

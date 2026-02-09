@@ -1,6 +1,7 @@
 import { OpenAI } from "openai";
 import fs from "fs";
 import path from "path";
+import { appendLog } from "@/lib/log-store";
 
 export const runtime = "nodejs";
 
@@ -29,6 +30,22 @@ function loadAllPortfolioData() {
 export async function POST(req: Request) {
     try {
         const { messages } = await req.json();
+        const latestUserMessage =
+            Array.isArray(messages)
+                ? [...messages].reverse().find((m: any) => m?.role === "user")?.content
+                : undefined;
+
+        appendLog(req.headers, {
+            type: "chat",
+            endpoint: "/api/chat",
+            method: "POST",
+            time: new Date().toISOString(),
+            message:
+                typeof latestUserMessage === "string"
+                    ? latestUserMessage.slice(0, 2000)
+                    : undefined,
+        }).catch(() => {});
+
         const allData = loadAllPortfolioData();
         const openai = getOpenAIClient();
 
@@ -165,6 +182,15 @@ ${allData}
 
     } catch (error) {
         console.error("Error in chat route:", error);
+        try {
+            appendLog(req.headers, {
+                type: "chat",
+                endpoint: "/api/chat",
+                method: "POST",
+                time: new Date().toISOString(),
+                data: { error: "Internal Server Error" },
+            }).catch(() => {});
+        } catch {}
         return new Response(JSON.stringify({ error: "Internal Server Error" }), { status: 500 });
     }
 }

@@ -1,9 +1,16 @@
 import fs from "fs";
 import path from "path";
 import { NextResponse } from "next/server";
+import { appendLog } from "@/lib/log-store";
 
-export async function GET() {
+export async function GET(req: Request) {
     try {
+        appendLog(req.headers, {
+            type: "api",
+            endpoint: "/api/projects",
+            method: "GET",
+            time: new Date().toISOString(),
+        }).catch(() => {});
         const filePath = path.join(process.cwd(), "data", "data.json");
         if (!fs.existsSync(filePath)) {
             return NextResponse.json({ error: "data.json not found" }, { status: 500 });

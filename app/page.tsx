@@ -40,11 +40,28 @@ export default function Home() {
   const [terminalSelection, setTerminalSelection] = useState<"github" | "exit" | null>(null);
   const [terminalMessages, setTerminalMessages] = useState<string[]>([]);
 
+  const sendClientLog = (event: string, data?: Record<string, unknown>) => {
+    if (typeof window === "undefined") return;
+    fetch("/api/log", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ event, data }),
+      keepalive: true,
+    }).catch(() => {});
+  };
+
   useEffect(() => {
     fetch("/api/projects")
       .then((res) => res.json())
       .then((payload) => setData(payload))
       .catch((err) => console.error("Failed to load projects:", err));
+  }, []);
+
+  useEffect(() => {
+    sendClientLog("page_view", {
+      path: typeof window !== "undefined" ? window.location.pathname : "/",
+      referrer: typeof document !== "undefined" ? document.referrer || undefined : undefined,
+    });
   }, []);
 
   const experiences = data?.experience || [];
@@ -233,6 +250,10 @@ export default function Home() {
 
   const openTerminal = (item: any) => setSelectedItem(item);
   const closeTerminal = () => setSelectedItem(null);
+
+  useEffect(() => {
+    sendClientLog("tab_change", { tab: activeCategory });
+  }, [activeCategory]);
 
   const terminalHeader = selectedItem
     ? selectedItem.title || selectedItem.school

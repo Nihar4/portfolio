@@ -4,7 +4,8 @@ substitutions:
   _IMAGE: portfolio
   _SERVICE: portfolio
   _NVIDIA_SECRET: NVIDIA_API_KEY
-  _CHAT_MODEL: mistralai/devstral-2-123b-instruct-2512
+  _MONGODB_SECRET: MONGODB_URI
+  _CHAT_MODEL: mistralai/mistral-large-3-675b-instruct-2512
 
 options:
   logging: CLOUD_LOGGING_ONLY
@@ -37,7 +38,7 @@ steps:
       - "--port"
       - "3000"
       - "--set-secrets"
-      - "NVIDIA_API_KEY=${_NVIDIA_SECRET}:latest"
+      - "NVIDIA_API_KEY=${_NVIDIA_SECRET}:latest,MONGODB_URI=${_MONGODB_SECRET}:latest"
       - "--set-env-vars"
       - "CHAT_MODEL=${_CHAT_MODEL}"
 

@@ -39,7 +39,7 @@ export async function POST(req: Request) {
                 ? [...messages].reverse().find((m: any) => m?.role === "user")?.content
                 : undefined;
 
-        appendLog(req.headers, {
+        await appendLog(req.headers, {
             type: "chat",
             endpoint: "/api/chat",
             method: "POST",
@@ -48,7 +48,7 @@ export async function POST(req: Request) {
                 typeof latestUserMessage === "string"
                     ? latestUserMessage.slice(0, 2000)
                     : undefined,
-        }, visitorId).catch(() => {});
+        }, visitorId);
 
         const allData = loadAllPortfolioData();
         const openai = getOpenAIClient();
@@ -196,13 +196,13 @@ ${allData}
     } catch (error) {
         console.error("Error in chat route:", error);
         try {
-            appendLog(req.headers, {
+            await appendLog(req.headers, {
                 type: "chat",
                 endpoint: "/api/chat",
                 method: "POST",
                 time: new Date().toISOString(),
                 data: { error: "Internal Server Error" },
-            }, visitorId).catch(() => {});
+            }, visitorId);
         } catch {}
         return new Response(JSON.stringify({ error: "Internal Server Error" }), { status: 500 });
     }

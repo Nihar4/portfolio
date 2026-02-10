@@ -152,8 +152,8 @@ export const appendLog = async (
     { upsert: true },
   );
 
-  // Background: fetch geolocation if not already stored
-  fetchAndStoreGeo(ip, key).catch(() => {});
+  // Fetch geolocation if not already stored (awaited so Cloud Run doesn't kill it)
+  await fetchAndStoreGeo(ip, key);
 };
 
 /** Fetch geo data for an IP and save to the visitor's document (only if missing) */

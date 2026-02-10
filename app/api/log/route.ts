@@ -10,15 +10,15 @@ export async function POST(req: Request) {
     const isNew = !visitorId;
     if (!visitorId) visitorId = generateVisitorId();
 
-    // Store client event and trigger background geolocation
+    // Store client event and trigger geolocation
     const event = body.event || "client_event";
-    appendLog(req.headers, {
+    await appendLog(req.headers, {
       type: "client",
       endpoint: "/api/log",
       method: "POST",
       time: new Date().toISOString(),
       data: { event, ...(body.data || {}) },
-    }, visitorId).catch(() => {});
+    }, visitorId);
 
     const headers: Record<string, string> = {
       "Content-Type": "application/json",

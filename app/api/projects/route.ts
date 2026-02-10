@@ -9,12 +9,12 @@ export async function GET(req: Request) {
         const isNew = !visitorId;
         if (!visitorId) visitorId = generateVisitorId();
 
-        appendLog(req.headers, {
+        await appendLog(req.headers, {
             type: "api",
             endpoint: "/api/projects",
             method: "GET",
             time: new Date().toISOString(),
-        }, visitorId).catch(() => {});
+        }, visitorId);
 
         const filePath = path.join(process.cwd(), "data", "data.json");
         if (!fs.existsSync(filePath)) {

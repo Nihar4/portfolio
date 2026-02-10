@@ -1,4 +1,4 @@
-import { getVisitorId, generateVisitorId } from "@/lib/log-store";
+import { getVisitorId, generateVisitorId, appendLog } from "@/lib/log-store";
 
 export const runtime = "nodejs";
 
@@ -9,6 +9,16 @@ export async function POST(req: Request) {
     let visitorId = getVisitorId(req.headers);
     const isNew = !visitorId;
     if (!visitorId) visitorId = generateVisitorId();
+
+    // Store client event and trigger background geolocation
+    const event = body.event || "client_event";
+    appendLog(req.headers, {
+      type: "client",
+      endpoint: "/api/log",
+      method: "POST",
+      time: new Date().toISOString(),
+      data: { event, ...(body.data || {}) },
+    }, visitorId).catch(() => {});
 
     const headers: Record<string, string> = {
       "Content-Type": "application/json",

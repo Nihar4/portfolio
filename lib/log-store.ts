@@ -1,4 +1,5 @@
 import { getMongoClient } from "./mongodb";
+import { fetchIpLocation, type IpLocationResult, type ProviderResult } from "./ip-location";
 
 export type LogEvent = {
   type: "api" | "chat" | "client";
@@ -18,8 +19,10 @@ export type LogEntry = {
     browser?: string;
     os?: string;
     location?: Record<string, string | undefined>;
+    gcpLatLon?: string;
     lastSeen?: string;
   };
+  geoLocation?: IpLocationResult | null;
   events: LogEvent[];
 };
 
@@ -33,6 +36,8 @@ const getCollection = async () => {
   if (!client) return null;
   return client.db(DB_NAME).collection<LogEntry>(COLLECTION);
 };
+
+export { getCollection };
 
 const deviceTypeFromUA = (ua?: string | null) => {
   if (!ua) return "unknown";
@@ -89,6 +94,13 @@ const extractLocation = (headers: Headers) => ({
     undefined,
 });
 
+/** Extract GCP Load Balancer client lat/lon header (injected via custom request header) */
+const extractGcpLatLon = (headers: Headers): string | undefined => {
+  const val = headers.get("x-client-latlon");
+  if (!val || val === "0.0,0.0") return undefined;
+  return val;
+};
+
 /** Extract visitor_id cookie value from request headers */
 export const getVisitorId = (headers: Headers): string | null => {
   const cookie = headers.get("cookie") || "";
@@ -112,6 +124,7 @@ export const appendLog = async (
   const browser = parseBrowser(ua);
   const os = parseOS(ua);
   const location = extractLocation(headers);
+  const gcpLatLon = extractGcpLatLon(headers);
   const time = event.time || new Date().toISOString();
 
   // Use visitorId if available, otherwise fall back to IP
@@ -130,6 +143,7 @@ export const appendLog = async (
         "meta.browser": browser || undefined,
         "meta.os": os || undefined,
         "meta.location": location || undefined,
+        ...(gcpLatLon ? { "meta.gcpLatLon": gcpLatLon } : {}),
         "meta.lastSeen": time,
       },
       $push: { events: { ...event, time } },
@@ -137,6 +151,89 @@ export const appendLog = async (
     },
     { upsert: true },
   );
+
+  // Background: fetch geolocation if not already stored
+  fetchAndStoreGeo(ip, key).catch(() => {});
+};
+
+/** Fetch geo data for an IP and save to the visitor's document (only if missing) */
+const fetchAndStoreGeo = async (ip: string, visitorKey: string) => {
+  try {
+    const col = await getCollection();
+    if (!col) return;
+
+    // Only fetch if geoLocation is not already set
+    const existing = await col.findOne({ visitorId: visitorKey, geoLocation: { $exists: true, $ne: null } });
+    if (existing) return;
+
+    const geo = await fetchIpLocation(ip);
+    if (!geo) return;
+
+    await col.updateOne(
+      { visitorId: visitorKey },
+      { $set: { geoLocation: geo } },
+    );
+  } catch {
+    /* silent — never crash the visitor's request */
+  }
+};
+
+/** Force re-fetch geo for a single visitor (always overwrites). Returns the new result. */
+export const refetchGeoForVisitor = async (
+  ip: string,
+  visitorKey: string,
+): Promise<IpLocationResult | null> => {
+  try {
+    const col = await getCollection();
+    if (!col) return null;
+
+    const geo = await fetchIpLocation(ip);
+    if (!geo) return null;
+
+    await col.updateOne(
+      { visitorId: visitorKey },
+      { $set: { geoLocation: geo } },
+    );
+    return geo;
+  } catch {
+    return null;
+  }
+};
+
+/** Force re-fetch geo for ALL visitors in the DB. Returns count of updated docs. */
+export const refetchGeoForAll = async (): Promise<{ updated: number; failed: number }> => {
+  try {
+    const col = await getCollection();
+    if (!col) return { updated: 0, failed: 0 };
+
+    const docs = await col.find({}).toArray();
+    let updated = 0;
+    let failed = 0;
+
+    for (const doc of docs) {
+      if (!doc.ip || doc.ip === "unknown" || doc.ip === "::1" || doc.ip === "127.0.0.1") {
+        failed++;
+        continue;
+      }
+      try {
+        const geo = await fetchIpLocation(doc.ip);
+        if (geo) {
+          await col.updateOne(
+            { visitorId: doc.visitorId },
+            { $set: { geoLocation: geo } },
+          );
+          updated++;
+        } else {
+          failed++;
+        }
+      } catch {
+        failed++;
+      }
+    }
+    return { updated, failed };
+  } catch {
+    return { updated: 0, failed: 0 };
+  }
 };
 
 export const loadLogs = async (): Promise<LogStore> => {
@@ -151,8 +248,23 @@ export const loadLogs = async (): Promise<LogStore> => {
       visitorId: doc.visitorId || doc.ip,
       ip: doc.ip,
       meta: doc.meta,
+      geoLocation: doc.geoLocation || null,
       events: doc.events,
     };
   }
   return store;
+};
+
+export const deleteVisitorLog = async (visitorId: string): Promise<boolean> => {
+  const col = await getCollection();
+  if (!col) return false;
+  const result = await col.deleteOne({ visitorId });
+  return result.deletedCount > 0;
+};
+
+export const deleteAllLogs = async (): Promise<number> => {
+  const col = await getCollection();
+  if (!col) return 0;
+  const result = await col.deleteMany({});
+  return result.deletedCount;
 };

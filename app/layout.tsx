@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     title: "Nihar Patel — Software Engineer",
     description:
       "Building production-grade distributed systems, cloud-native tooling, and event-driven data pipelines.",
-    url: "https://niharpatel.dev",
+    url: "https://niharpatel.me",
     siteName: "Nihar Patel",
     type: "website",
     locale: "en_US",
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     description:
       "Distributed systems · Cloud infrastructure · High-throughput backend services",
   },
-  metadataBase: new URL("https://niharpatel.dev"),
+  metadataBase: new URL("https://niharpatel.me"),
 };
 
 export default function RootLayout({

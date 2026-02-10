@@ -29,7 +29,6 @@ function loadAllPortfolioData() {
 
 export async function POST(req: Request) {
     let visitorId = getVisitorId(req.headers);
-    const isNewVisitor = !visitorId;
     if (!visitorId) visitorId = generateVisitorId();
 
     try {
@@ -183,15 +182,12 @@ ${allData}
         });
 
         // Return standard Response object with correct headers for AI SDK
-        const responseHeaders: Record<string, string> = {
-            "Content-Type": "text/plain; charset=utf-8",
-            "X-Vercel-AI-Data-Stream": "v1",
-        };
-        if (isNewVisitor) {
-            responseHeaders["Set-Cookie"] =
-                `visitor_id=${visitorId}; Path=/; HttpOnly; SameSite=Lax; Max-Age=31536000`;
-        }
-        return new Response(stream, { headers: responseHeaders });
+        return new Response(stream, {
+            headers: {
+                "Content-Type": "text/plain; charset=utf-8",
+                "X-Vercel-AI-Data-Stream": "v1",
+            },
+        });
 
     } catch (error) {
         console.error("Error in chat route:", error);

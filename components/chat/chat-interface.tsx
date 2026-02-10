@@ -10,6 +10,7 @@ import { MessageBubble } from "./message-bubble"
 import { ReasoningTerminal } from "./reasoning-terminal"
 import Image from "next/image"
 import { cn } from "@/lib/utils"
+import { visitorHeaders } from "@/lib/visitor"
 
 export function ChatInterface({ initialMessage, isFullScreen = false }: { initialMessage?: string, isFullScreen?: boolean }) {
     // Store reasoning logs keyed by the *assistant's* message ID (or index if ID is unstable)
@@ -19,6 +20,7 @@ export function ChatInterface({ initialMessage, isFullScreen = false }: { initia
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
     const { messages, input, handleInputChange, handleSubmit, isLoading, data, append, setInput } = useChat({
         api: "/api/chat",
+        headers: visitorHeaders(),
         // We don't use initialMessages for the trigger because it doesn't auto-submit.
         // We handle that via useEffect below.
         initialMessages: [],

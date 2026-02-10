@@ -6,7 +6,6 @@ import { appendLog, getVisitorId, generateVisitorId } from "@/lib/log-store";
 export async function GET(req: Request) {
     try {
         let visitorId = getVisitorId(req.headers);
-        const isNew = !visitorId;
         if (!visitorId) visitorId = generateVisitorId();
 
         await appendLog(req.headers, {
@@ -22,14 +21,7 @@ export async function GET(req: Request) {
         }
         const raw = fs.readFileSync(filePath, "utf-8");
         const parsed = JSON.parse(raw);
-        const res = NextResponse.json(parsed);
-        if (isNew) {
-            res.headers.set(
-                "Set-Cookie",
-                `visitor_id=${visitorId}; Path=/; HttpOnly; SameSite=Lax; Max-Age=31536000`,
-            );
-        }
-        return res;
+        return NextResponse.json(parsed);
     } catch (error) {
         console.error("Error loading projects:", error);
         return NextResponse.json({ error: "Failed to load projects" }, { status: 500 });

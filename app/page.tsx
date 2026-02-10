@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode, type MouseEvent as ReactMouseEvent } from "react";
 import { AnimatePresence, motion, useMotionValue, useSpring, useTransform, useInView, useScroll } from "framer-motion";
+import { visitorHeaders } from "@/lib/visitor";
 
 /* ── constants ─────────────────────────────────────────── */
 
@@ -331,14 +332,14 @@ export default function Home() {
     if (typeof window === "undefined") return;
     fetch("/api/log", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: visitorHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify({ event, data: extra }),
       keepalive: true,
     }).catch(() => {});
   };
 
   useEffect(() => {
-    fetch("/api/projects")
+    fetch("/api/projects", { headers: visitorHeaders() })
       .then((r) => r.json())
       .then(setData)
       .catch(console.error);

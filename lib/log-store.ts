@@ -101,11 +101,9 @@ const extractGcpLatLon = (headers: Headers): string | undefined => {
   return val;
 };
 
-/** Extract visitor_id cookie value from request headers */
+/** Extract visitor_id from x-visitor-id header (localStorage-based) */
 export const getVisitorId = (headers: Headers): string | null => {
-  const cookie = headers.get("cookie") || "";
-  const match = cookie.match(/(?:^|;\s*)visitor_id=([^;]+)/);
-  return match ? match[1] : null;
+  return headers.get("x-visitor-id") || null;
 };
 
 /** Generate a random UUID v4 */

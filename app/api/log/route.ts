@@ -7,7 +7,6 @@ export async function POST(req: Request) {
     const body = await req.json();
 
     let visitorId = getVisitorId(req.headers);
-    const isNew = !visitorId;
     if (!visitorId) visitorId = generateVisitorId();
 
     // Store client event and trigger geolocation
@@ -20,17 +19,9 @@ export async function POST(req: Request) {
       data: { event, ...(body.data || {}) },
     }, visitorId);
 
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-    };
-    if (isNew) {
-      headers["Set-Cookie"] =
-        `visitor_id=${visitorId}; Path=/; HttpOnly; SameSite=Lax; Max-Age=31536000`;
-    }
-
     return new Response(JSON.stringify({ ok: true }), {
       status: 200,
-      headers,
+      headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
     console.error("Error in log route:", error);

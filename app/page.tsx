@@ -10,6 +10,7 @@ import {
 import { ThemeToggle } from "@/components/theme-toggle";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   FileText, Github, Linkedin, Mail, Terminal, X,
   Briefcase, GraduationCap, Code2,
@@ -146,17 +147,16 @@ function SectionHeader({
 
 /* ── section divider ───────────────────────────────────── */
 
+const G_COLORS = ["#4285F4", "#EA4335", "#FBBC05", "#34A853"] as const;
+
 function SectionDivider() {
   return (
-    <div className="max-w-6xl mx-auto px-6">
-      <div
-        className="h-[1px] w-full"
-        style={{
-          background:
-            "linear-gradient(to right, transparent 0%, var(--border) 30%, var(--border) 70%, transparent 100%)",
-          opacity: 0.5,
-        }}
-      />
+    <div className="max-w-6xl mx-auto px-6 flex items-center justify-center gap-2 py-1">
+      <div className="flex-1 h-px bg-border/30" />
+      {G_COLORS.map((c) => (
+        <div key={c} className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: c, opacity: 0.7 }} />
+      ))}
+      <div className="flex-1 h-px bg-border/30" />
     </div>
   );
 }
@@ -290,18 +290,161 @@ function useTypedText(words: string[], speed = 80, deleteSpeed = 40, pause = 180
   return text;
 }
 
+/* ── typewriter line ───────────────────────────────────── */
+
+function TerminalLine({
+  text,
+  delay = 0,
+  speed = 8,
+  onDone,
+  className,
+}: {
+  text: string;
+  delay?: number;
+  speed?: number;
+  onDone?: () => void;
+  className?: string;
+}) {
+  const [displayed, setDisplayed] = useState("");
+  const [started, setStarted] = useState(false);
+  const doneRef = useRef(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setStarted(true), delay);
+    return () => clearTimeout(t);
+  }, [delay]);
+
+  useEffect(() => {
+    if (!started) return;
+    if (displayed.length >= text.length) {
+      if (!doneRef.current) {
+        doneRef.current = true;
+        onDone?.();
+      }
+      return;
+    }
+    const t = setTimeout(() => setDisplayed(text.slice(0, displayed.length + 1)), speed);
+    return () => clearTimeout(t);
+  }, [started, displayed, text, speed, onDone]);
+
+  if (!started) return null;
+
+  return (
+    <div className={className}>
+      {displayed}
+      {displayed.length < text.length && (
+        <span className="inline-block w-1.5 h-3 bg-green-400 align-middle ml-0.5 animate-pulse" />
+      )}
+    </div>
+  );
+}
+
+/* ── terminal command input ────────────────────────────── */
+
+function TerminalInput({
+  options,
+  onRun,
+  selected,
+  onSelect,
+}: {
+  options: string[];
+  onRun: (cmd: string) => void;
+  selected: string | null;
+  onSelect: (cmd: string) => void;
+}) {
+  const [input, setInput] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const filtered = options.filter((o) => o.startsWith(input.toLowerCase()));
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const cmd = input.toLowerCase().trim();
+    if (options.includes(cmd)) {
+      onRun(cmd);
+      setInput("");
+      setShowSuggestions(false);
+    } else if (filtered.length === 1) {
+      onRun(filtered[0]);
+      setInput("");
+      setShowSuggestions(false);
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInput(e.target.value);
+    setShowSuggestions(e.target.value.length > 0);
+  };
+
+  return (
+    <div className="relative">
+      {/* autocomplete dropdown */}
+      <AnimatePresence>
+        {showSuggestions && filtered.length > 0 && input.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 4 }}
+            className="absolute bottom-full left-0 right-0 mb-1 rounded-md border border-green-500/30 bg-black/95 backdrop-blur-sm overflow-hidden z-10"
+          >
+            {filtered.map((cmd) => (
+              <button
+                key={cmd}
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => {
+                  onRun(cmd);
+                  setInput("");
+                  setShowSuggestions(false);
+                }}
+                className={`w-full text-left px-3 py-1.5 text-xs font-mono transition-colors ${
+                  cmd === selected
+                    ? "bg-green-500/20 text-white"
+                    : "text-green-200/80 hover:bg-green-500/10 hover:text-white"
+                }`}
+              >
+                <span className="text-green-400 mr-1">&gt;</span> {cmd}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <form onSubmit={handleSubmit} className="flex items-center gap-2 border-t border-green-500/30 pt-3">
+        <span className="text-green-400 text-xs select-none">$</span>
+        <input
+          ref={inputRef}
+          value={input}
+          onChange={handleChange}
+          onFocus={() => input.length > 0 && setShowSuggestions(true)}
+          onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+          placeholder="type a command..."
+          spellCheck={false}
+          autoComplete="off"
+          className="flex-1 bg-transparent text-xs font-mono text-green-100 placeholder:text-green-200/30 outline-none caret-green-400"
+        />
+        <span className="text-[10px] text-green-200/40 hidden sm:inline">↵ run</span>
+      </form>
+    </div>
+  );
+}
+
 /* ── page ──────────────────────────────────────────────── */
 
 export default function Home() {
+  const router = useRouter();
   const [data, setData] = useState<any | null>(null);
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
-  const [terminalSelection, setTerminalSelection] = useState<"github" | "exit" | null>(null);
+  const [terminalSelection, setTerminalSelection] = useState<string | null>(null);
   const [terminalMessages, setTerminalMessages] = useState<string[]>([]);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   /* scroll progress */
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, { stiffness: 200, damping: 40, restDelta: 0.001 });
+  const progressWidth = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
+  const springWidth = useSpring(progressWidth, { stiffness: 200, damping: 40, restDelta: 0.001 });
   const backToTopOpacity = useTransform(scrollYProgress, [0, 0.08, 0.1], [0, 0, 1]);
 
   /* active section tracking */
@@ -475,44 +618,53 @@ export default function Home() {
   const closeTerminal = () => setSelectedItem(null);
   const terminalHeader = selectedItem?.title || selectedItem?.school || "Terminal";
 
+  const terminalOptions = useMemo(() => {
+    if (!selectedItem) return [];
+    const opts: string[] = ["ask"];
+    if (selectedItem.kind === "projects" && selectedItem.repo) opts.push("github");
+    opts.push("exit");
+    return opts;
+  }, [selectedItem]);
+
+  const runCommand = useCallback((choice: string) => {
+    if (!selectedItem) return;
+    if (choice === "ask") {
+      const prompt = selectedItem.kind === "experience"
+        ? `Tell me about your experience at ${selectedItem.company || selectedItem.title}`
+        : selectedItem.kind === "education"
+          ? `Tell me about your education at ${selectedItem.title}`
+          : selectedItem.kind === "skills"
+            ? `Tell me about your ${selectedItem.title} skills`
+            : `Tell me about the ${selectedItem.title} project`;
+      setTerminalMessages((p) => [...p, "> Executing: ask_ai.sh...", "> Redirecting to AI chat..."]);
+      setTimeout(() => router.push(`/chat?q=${encodeURIComponent(prompt)}`), 600);
+    } else if (choice === "github" && selectedItem.repo) {
+      setTerminalMessages((p) => [...p, "> Executing: open_github.sh...", "> Opening repository in new tab."]);
+      window.open(selectedItem.repo, "_blank", "noopener,noreferrer");
+    } else if (choice === "exit") {
+      setTerminalMessages((p) => [...p, "> exit_terminal.sh...", "> Closing terminal."]);
+      setSelectedItem(null);
+    }
+  }, [selectedItem, router]);
+
   useEffect(() => {
     if (!selectedItem) return;
     setTerminalMessages([]);
-    setTerminalSelection(selectedItem.kind === "projects" && selectedItem.repo ? "github" : "exit");
+    setTerminalSelection("ask");
   }, [selectedItem]);
 
   useEffect(() => {
     if (!selectedItem) return;
-    const options =
-      selectedItem.kind === "projects" && selectedItem.repo ? ["github", "exit"] : ["exit"];
 
     const move = (dir: "next" | "prev") => {
       if (!terminalSelection) return;
-      const idx = options.indexOf(terminalSelection);
+      const idx = terminalOptions.indexOf(terminalSelection);
       if (idx < 0) return;
       const next =
         dir === "next"
-          ? (idx + 1) % options.length
-          : (idx - 1 + options.length) % options.length;
-      setTerminalSelection(options[next] as "github" | "exit");
-    };
-
-    const run = (choice: "github" | "exit", label?: string) => {
-      if (choice === "github" && selectedItem.repo) {
-        setTerminalMessages((p) => [
-          ...p,
-          `> Executing: ${label || "open_github.sh"}...`,
-          "> Opening repository in new tab.",
-        ]);
-        window.open(selectedItem.repo, "_blank", "noopener,noreferrer");
-      } else {
-        setTerminalMessages((p) => [
-          ...p,
-          `> ${label || "exit_terminal.sh"}...`,
-          "> Closing terminal.",
-        ]);
-        closeTerminal();
-      }
+          ? (idx + 1) % terminalOptions.length
+          : (idx - 1 + terminalOptions.length) % terminalOptions.length;
+      setTerminalSelection(terminalOptions[next]);
     };
 
     const onKeyDown = (e: KeyboardEvent) => {
@@ -520,16 +672,13 @@ export default function Home() {
         e.preventDefault();
       if (e.key === "ArrowRight" || e.key === "ArrowDown") return move("next");
       if (e.key === "ArrowLeft" || e.key === "ArrowUp") return move("prev");
-      if (e.key === "Enter" && terminalSelection)
-        run(
-          terminalSelection,
-          terminalSelection === "github" ? "open_github.sh" : "exit_terminal.sh",
-        );
+      if (e.key === "Enter" && terminalSelection) runCommand(terminalSelection);
     };
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [selectedItem, terminalSelection]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedItem, terminalSelection, terminalOptions, runCommand]);
 
   /* ── cursor spotlight ─────────────────────────────── */
   const spotlightRef = useRef<HTMLDivElement>(null);
@@ -559,7 +708,7 @@ export default function Home() {
         </div>
         <nav className="sticky top-0 z-50 border-b border-border/40 bg-background/70 backdrop-blur-xl">
           <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-            <span className="font-bold text-lg tracking-tight select-none">NP<span className="text-primary">.</span></span>
+            <span className="font-bold text-lg tracking-tight select-none">NP<span className="logo-dot">.</span></span>
             <div className="flex items-center gap-2">
               <div className="skeleton w-8 h-8 rounded-lg" />
               <div className="skeleton w-8 h-8 rounded-lg" />
@@ -572,7 +721,18 @@ export default function Home() {
           <div className="flex flex-col items-center gap-6 pt-16">
             <div className="skeleton w-32 h-32 rounded-full" />
             <div className="skeleton w-64 h-10 rounded-xl" />
-            <div className="skeleton w-80 h-5 rounded-lg max-w-full" />
+            {/* Google-colored loading dots */}
+            <div className="flex items-center gap-2 mt-2">
+              {G_COLORS.map((c, i) => (
+                <motion.div
+                  key={c}
+                  className="w-2.5 h-2.5 rounded-full"
+                  style={{ backgroundColor: c }}
+                  animate={{ y: [0, -8, 0] }}
+                  transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15, ease: "easeInOut" }}
+                />
+              ))}
+            </div>
             <div className="flex gap-3 mt-2">
               <div className="skeleton w-28 h-10 rounded-full" />
               <div className="skeleton w-28 h-10 rounded-full" />
@@ -641,14 +801,17 @@ export default function Home() {
       {/* ── scroll progress bar ────────────────────── */}
       <motion.div
         style={{ scaleX }}
-        className="fixed top-0 left-0 right-0 h-[2px] bg-linear-to-r from-primary via-primary/80 to-accent origin-left z-[60]"
-      />
+        className="fixed top-0 left-0 right-0 h-[3px] origin-left z-[60]"
+        aria-hidden="true"
+      >
+        <div className="h-full w-full" style={{ background: "linear-gradient(90deg, #4285F4 0%, #4285F4 25%, #EA4335 25%, #EA4335 50%, #FBBC05 50%, #FBBC05 75%, #34A853 75%, #34A853 100%)" }} />
+      </motion.div>
 
       {/* ── sticky navbar ──────────────────────────── */}
       <nav className="sticky top-0 z-50 border-b border-border/40 bg-background/70 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
           <Link href="/" className="font-bold text-lg tracking-tight select-none">
-            NP<span className="text-primary">.</span>
+            NP<span className="logo-dot">.</span>
           </Link>
 
           {/* section links — hidden on mobile */}
@@ -666,7 +829,8 @@ export default function Home() {
                 {activeSection === s.id && (
                   <motion.span
                     layoutId="nav-pill"
-                    className="absolute inset-0 rounded-lg bg-primary/10"
+                    className="absolute inset-0 rounded-lg"
+                    style={{ background: "linear-gradient(135deg, rgba(66,133,244,0.12), rgba(234,67,53,0.08), rgba(251,188,5,0.08), rgba(52,168,83,0.12))" }}
                     transition={{ type: "spring", stiffness: 350, damping: 30 }}
                   />
                 )}
@@ -705,30 +869,42 @@ export default function Home() {
         </div>
         <AnimatePresence>
           {mobileNavOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.2 }}
-              className="md:hidden border-t border-border/40 overflow-hidden"
-            >
-              <div className="px-6 py-3 flex flex-col gap-1">
-                {NAV_SECTIONS.map((s) => (
-                  <a
-                    key={s.id}
-                    href={`#${s.id}`}
-                    onClick={() => setMobileNavOpen(false)}
-                    className={`px-3 py-2 rounded-lg text-sm transition-colors ${
-                      activeSection === s.id
-                        ? "text-primary font-medium bg-primary/10"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
-                    }`}
-                  >
-                    {s.label}
-                  </a>
-                ))}
-              </div>
-            </motion.div>
+            <>
+              {/* backdrop overlay */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="md:hidden fixed inset-0 top-14 z-40 bg-black/40 backdrop-blur-sm"
+                onClick={() => setMobileNavOpen(false)}
+              />
+              {/* slide-in sheet */}
+              <motion.div
+                initial={{ x: "100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "100%" }}
+                transition={{ type: "spring", stiffness: 350, damping: 35 }}
+                className="md:hidden fixed top-14 right-0 bottom-0 z-50 w-64 bg-background/95 backdrop-blur-xl border-l border-border/40 shadow-2xl"
+              >
+                <div className="px-6 py-6 flex flex-col gap-1">
+                  {NAV_SECTIONS.map((s) => (
+                    <a
+                      key={s.id}
+                      href={`#${s.id}`}
+                      onClick={() => setMobileNavOpen(false)}
+                      className={`px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
+                        activeSection === s.id
+                          ? "text-primary bg-primary/10"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                      }`}
+                    >
+                      {s.label}
+                    </a>
+                  ))}
+                </div>
+              </motion.div>
+            </>
           )}
         </AnimatePresence>
       </nav>
@@ -811,7 +987,7 @@ export default function Home() {
             >
               <Link
                 href="#chat"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground font-medium text-sm hover:brightness-110 transition-all shadow-lg shadow-primary/25"
+                className="google-shimmer inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground font-medium text-sm hover:brightness-110 transition-all shadow-lg shadow-primary/25"
               >
                 <Sparkles className="w-4 h-4" />
                 Ask my AI
@@ -875,7 +1051,10 @@ export default function Home() {
                 className="relative"
               >
                 {/* timeline dot */}
-                <div className="absolute -left-6.5 sm:-left-7.25 top-5 w-4 h-4 rounded-full bg-primary/80 border-[3px] border-background shadow-md shadow-primary/20" />
+                <div
+                  className="absolute -left-6.5 sm:-left-7.25 top-5 w-4 h-4 rounded-full border-[3px] border-background shadow-md"
+                  style={{ backgroundColor: G_COLORS[idx % G_COLORS.length], boxShadow: `0 4px 6px ${G_COLORS[idx % G_COLORS.length]}33` }}
+                />
 
                 <button
                   onClick={() => openTerminal(item)}
@@ -927,7 +1106,9 @@ export default function Home() {
                     {/* click hint */}
                     <div className="mt-4 flex items-center gap-1.5 text-xs text-muted-foreground/70 group-hover:text-primary/70 transition-colors">
                       <Terminal className="w-3 h-3" />
-                      <span>Click to open terminal</span>
+                      <span className="sm:hidden">Tap to open terminal</span>
+                      <span className="hidden sm:inline">Click to open terminal</span>
+                      <kbd className="hidden sm:inline-flex ml-auto items-center gap-0.5 text-[10px] text-muted-foreground/50 border border-border/30 rounded px-1.5 py-0.5 font-mono">⏎</kbd>
                     </div>
                   </div>
                   </GlowCard>
@@ -1000,6 +1181,18 @@ export default function Home() {
                         </Badge>
                       )}
                     </div>
+
+                    {/* click affordance */}
+                    <div className="mt-auto pt-4 flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground/60 group-hover:text-primary/70 transition-colors">
+                        <Terminal className="w-3 h-3" />
+                        <span className="sm:hidden">Tap to explore</span>
+                        <span className="hidden sm:inline">Click to explore</span>
+                      </div>
+                      <span className="inline-flex items-center gap-1 text-[10px] font-mono text-muted-foreground/0 group-hover:text-primary transition-all duration-200 translate-x-2 group-hover:translate-x-0">
+                        Open <span className="text-xs">→</span>
+                      </span>
+                    </div>
                   </div>
                   </GlowCard>
                   </TiltCard>
@@ -1035,9 +1228,11 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-60px" }}
                 transition={{ delay: gIdx * 0.1, duration: 0.5 }}
-                className="p-5 rounded-2xl border border-border/50 bg-card/60 backdrop-blur-sm hover:border-primary/20 transition-colors"
+                className="p-5 rounded-2xl border border-border/50 bg-card/60 backdrop-blur-sm hover:border-primary/20 transition-colors relative overflow-hidden"
               >
-                <h3 className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">
+                {/* Google-color top accent */}
+                <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: G_COLORS[gIdx % 4] }} />
+                <h3 className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: G_COLORS[gIdx % 4] }}>
                   {group.title}
                 </h3>
                 <div className="flex flex-wrap gap-1.5">
@@ -1119,6 +1314,18 @@ export default function Home() {
                         </Badge>
                       ))}
                     </div>
+
+                    {/* click affordance */}
+                    <div className="mt-4 flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground/60 group-hover:text-primary/70 transition-colors">
+                        <Terminal className="w-3 h-3" />
+                        <span className="sm:hidden">Tap to explore</span>
+                        <span className="hidden sm:inline">Click to explore</span>
+                      </div>
+                      <span className="inline-flex items-center gap-1 text-[10px] font-mono text-muted-foreground/0 group-hover:text-primary transition-all duration-200 translate-x-2 group-hover:translate-x-0">
+                        Open <span className="text-xs">→</span>
+                      </span>
+                    </div>
                   </div>
                 </button>
               </motion.div>
@@ -1142,9 +1349,9 @@ export default function Home() {
                 <motion.div
                   key={a.id}
                   variants={fadeUp}
-                  className="flex items-start gap-3 p-5 rounded-2xl border border-amber-500/20 bg-amber-500/5"
+                  className="flex items-start gap-3 p-5 rounded-2xl border border-[#FBBC05]/25 bg-[#FBBC05]/5"
                 >
-                  <Trophy className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                  <Trophy className="w-5 h-5 text-[#FBBC05] shrink-0 mt-0.5" />
                   <div>
                     <p className="text-sm font-medium">{a.title}</p>
                     {a.details && (
@@ -1195,7 +1402,14 @@ export default function Home() {
       {/* ── footer ─────────────────────────────────── */}
       <footer className="border-t border-border/40 py-8 px-6">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-          <span>&copy; {new Date().getFullYear()} Nihar Patel</span>
+          <span className="inline-flex items-center gap-1.5">
+            &copy; {new Date().getFullYear()} Nihar Patel
+            <span className="inline-flex gap-px ml-1" aria-hidden="true">
+              {G_COLORS.map((c) => (
+                <span key={c} className="w-1 h-1 rounded-full" style={{ backgroundColor: c }} />
+              ))}
+            </span>
+          </span>
           <div className="flex items-center gap-5">
             <Link
               href="https://www.linkedin.com/in/niharpatel4"
@@ -1252,85 +1466,76 @@ export default function Home() {
             </div>
 
             {/* terminal body */}
-            <div className="mt-4 flex-1 overflow-y-auto space-y-2 text-xs sm:text-sm wrap-break-word">
+            <div className="mt-4 flex-1 overflow-y-auto text-xs sm:text-sm wrap-break-word terminal-scroll">
+              <AnimatePresence mode="wait">
               {selectedItem && (
-                <>
+                <motion.div
+                  key={selectedItem.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className="space-y-0"
+                >
                   {selectedItem.kind === "experience" && (
                     <>
-                      <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={spring}>
-                        <span className="text-green-300">ROLE:</span> {selectedItem.role || selectedItem.title}
-                      </motion.div>
+                      <TerminalLine text={`ROLE: ${selectedItem.role || selectedItem.title}`} delay={0} className="text-green-200" />
                       {selectedItem.company && (
-                        <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ ...spring, delay: 0.04 }}>
-                          <span className="text-green-300">COMPANY:</span> {selectedItem.company}
-                        </motion.div>
+                        <TerminalLine text={`COMPANY: ${selectedItem.company}`} delay={100} className="text-green-200" />
                       )}
                       {selectedItem.location && (
-                        <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ ...spring, delay: 0.06 }}>
-                          <span className="text-green-300">LOCATION:</span> {selectedItem.location}
-                        </motion.div>
+                        <TerminalLine text={`LOCATION: ${selectedItem.location}`} delay={200} className="text-green-200" />
                       )}
                     </>
                   )}
 
                   {selectedItem.kind === "projects" && (
-                    <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={spring}>
-                      <span className="text-green-300">PROJECT:</span> {selectedItem.title}
-                    </motion.div>
+                    <TerminalLine text={`PROJECT: ${selectedItem.title}`} delay={0} className="text-green-200" />
                   )}
 
                   {selectedItem.kind === "skills" && (
-                    <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={spring}>
-                      <span className="text-green-300">SKILL AREA:</span> {selectedItem.title}
-                    </motion.div>
+                    <TerminalLine text={`SKILL AREA: ${selectedItem.title}`} delay={0} className="text-green-200" />
                   )}
 
                   {selectedItem.kind === "education" && (
                     <>
-                      <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={spring}>
-                        <span className="text-green-300">SCHOOL:</span> {selectedItem.title}
-                      </motion.div>
+                      <TerminalLine text={`SCHOOL: ${selectedItem.title}`} delay={0} className="text-green-200" />
                       {selectedItem.degree && (
-                        <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ ...spring, delay: 0.04 }}>
-                          <span className="text-green-300">DEGREE:</span> {selectedItem.degree}
-                        </motion.div>
+                        <TerminalLine text={`DEGREE: ${selectedItem.degree}`} delay={100} className="text-green-200" />
                       )}
                       {selectedItem.date && (
-                        <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ ...spring, delay: 0.08 }}>
-                          <span className="text-green-300">DATES:</span> {selectedItem.date}
-                        </motion.div>
+                        <TerminalLine text={`DATES: ${selectedItem.date}`} delay={200} className="text-green-200" />
                       )}
                     </>
                   )}
 
                   {selectedItem.stack && (selectedItem.kind === "experience" || selectedItem.kind === "projects") && (
-                    <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ ...spring, delay: 0.08 }}>
-                      <span className="text-green-300">STACK:</span> {selectedItem.stack.join(", ")}
-                    </motion.div>
+                    <TerminalLine text={`STACK: ${selectedItem.stack.join(", ")}`} delay={250} className="text-green-200" />
                   )}
 
                   {selectedItem.logs && selectedItem.logs.length > 0 && (
-                    <div className="space-y-1 mt-4">
-                      <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ ...spring, delay: 0.1 }}>
-                        <span className="text-green-300">
-                          {selectedItem.kind === "experience"
+                    <div className="space-y-0 mt-4">
+                      <TerminalLine
+                        text={
+                          selectedItem.kind === "experience"
                             ? "HIGHLIGHTS:"
                             : selectedItem.kind === "skills"
                               ? "CAPABILITIES:"
                               : selectedItem.kind === "education"
                                 ? "COURSEWORK:"
-                                : "DETAILS:"}
-                        </span>
-                      </motion.div>
+                                : "DETAILS:"
+                        }
+                        delay={300}
+                        className="text-green-300"
+                      />
                       {selectedItem.logs.map((log: string, i: number) => (
-                        <motion.div
-                          key={`${selectedItem.title || selectedItem.school}-${i}`}
-                          initial={{ opacity: 0, x: -8 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ ...spring, delay: 0.14 + i * 0.05 }}
-                        >
-                          &gt; {log}
-                        </motion.div>
+                        <TerminalLine
+                          key={`${selectedItem.id}-log-${i}`}
+                          text={`> ${log}`}
+                          delay={350 + i * 80}
+                          speed={6}
+                          className="text-green-400/90"
+                        />
                       ))}
                     </div>
                   )}
@@ -1339,39 +1544,51 @@ export default function Home() {
                   <div className="mt-6 space-y-2">
                     <div className="text-green-300 text-xs">COMMANDS:</div>
                     <div className="space-y-1 text-xs">
+                      <div
+                        onClick={() => terminalSelection === "ask" ? runCommand("ask") : setTerminalSelection("ask")}
+                        className={`cursor-pointer flex items-center gap-2 py-1.5 px-2 -mx-2 rounded-md transition-colors ${
+                          terminalSelection === "ask" ? "text-white bg-green-500/10" : "text-green-200/80 active:bg-green-500/5"
+                        }`}
+                      >
+                        <span className="text-green-400">&gt;</span>
+                        <span>ask</span>
+                        <span className="text-green-200/40 ml-1 hidden sm:inline">— chat with AI about this</span>
+                        {terminalSelection === "ask" && (
+                          <span className="ml-auto inline-block animate-pulse text-green-400">▋</span>
+                        )}
+                      </div>
                       {selectedItem.kind === "projects" && selectedItem.repo && (
                         <div
-                          onClick={() => setTerminalSelection("github")}
-                          className={`cursor-pointer flex items-center gap-2 ${
-                            terminalSelection === "github" ? "text-white" : "text-green-200/80"
+                          onClick={() => terminalSelection === "github" ? runCommand("github") : setTerminalSelection("github")}
+                          className={`cursor-pointer flex items-center gap-2 py-1.5 px-2 -mx-2 rounded-md transition-colors ${
+                            terminalSelection === "github" ? "text-white bg-green-500/10" : "text-green-200/80 active:bg-green-500/5"
                           }`}
                         >
                           <span className="text-green-400">&gt;</span>
                           <span>github</span>
+                          <span className="text-green-200/40 ml-1 hidden sm:inline">— open repository</span>
                           {terminalSelection === "github" && (
-                            <span className="ml-1 inline-block animate-pulse text-green-400">
-                              ▋
-                            </span>
+                            <span className="ml-auto inline-block animate-pulse text-green-400">▋</span>
                           )}
                         </div>
                       )}
                       <div
-                        onClick={() => setTerminalSelection("exit")}
-                        className={`cursor-pointer flex items-center gap-2 ${
-                          terminalSelection === "exit" ? "text-white" : "text-green-200/80"
+                        onClick={() => terminalSelection === "exit" ? runCommand("exit") : setTerminalSelection("exit")}
+                        className={`cursor-pointer flex items-center gap-2 py-1.5 px-2 -mx-2 rounded-md transition-colors ${
+                          terminalSelection === "exit" ? "text-white bg-green-500/10" : "text-green-200/80 active:bg-green-500/5"
                         }`}
                       >
                         <span className="text-green-400">&gt;</span>
                         <span>exit</span>
+                        <span className="text-green-200/40 ml-1 hidden sm:inline">— close terminal</span>
                         {terminalSelection === "exit" && (
-                          <span className="ml-1 inline-block animate-pulse text-green-400">
-                            ▋
-                          </span>
+                          <span className="ml-auto inline-block animate-pulse text-green-400">▋</span>
                         )}
                       </div>
                     </div>
                     <div className="text-[10px] text-green-200/60">
-                      Use arrow keys to move, Enter to run.
+                      <span className="hidden sm:inline">Use arrow keys to navigate, Enter to run.</span>
+                      <span className="sm:hidden">Tap to select, tap again to run.</span>
                     </div>
                     {terminalMessages.length > 0 && (
                       <div className="mt-3 space-y-1 text-green-200/80 text-xs">
@@ -1381,9 +1598,22 @@ export default function Home() {
                       </div>
                     )}
                   </div>
-                </>
+                </motion.div>
               )}
+              </AnimatePresence>
             </div>
+
+            {/* command input */}
+            {selectedItem && (
+              <div className="mt-2 shrink-0">
+                <TerminalInput
+                  options={terminalOptions}
+                  onRun={runCommand}
+                  selected={terminalSelection}
+                  onSelect={setTerminalSelection}
+                />
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>

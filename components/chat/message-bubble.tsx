@@ -90,7 +90,7 @@ export function MessageBubble({ role, content }: MessageBubbleProps) {
             transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
             className="flex w-full justify-start group"
         >
-            <div className="relative max-w-[85%] rounded-2xl px-5 py-4 text-sm shadow-sm leading-relaxed bg-muted text-foreground rounded-tl-sm border border-border/50">
+            <div className="relative max-w-[85%] rounded-2xl px-5 py-4 text-sm shadow-sm leading-relaxed bg-muted text-foreground rounded-tl-sm border border-border/50 border-l-[3px] border-l-[#4285F4]">
                 {/* Copy button */}
                 <button
                     onClick={handleCopy}

@@ -124,15 +124,6 @@ export function ChatInterface({ initialMessage, isFullScreen = false }: { initia
 
                     {messages.length === 0 && !isLoading && (
                         <div className="flex flex-col items-center justify-center text-center mt-8 space-y-4">
-                            <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-primary/20 shadow-lg bg-card">
-                                <Image
-                                    src="/me.png"
-                                    alt="Nihar"
-                                    fill
-                                    className="object-cover"
-                                    sizes="64px"
-                                />
-                            </div>
                             <div className="space-y-1">
                                 <h3 className="text-base font-semibold text-foreground">Chat with Nihar's AI</h3>
                                 <p className="text-sm text-muted-foreground max-w-xs">
@@ -189,7 +180,7 @@ export function ChatInterface({ initialMessage, isFullScreen = false }: { initia
                     {/* Loading State (if no thinking yet) */}
                     {isLoading && messages[messages.length - 1]?.role === 'user' && !currentThinking && (
                         <div className="flex justify-start">
-                            <div className="bg-muted rounded-2xl rounded-tl-sm border border-border/50 px-5 py-4 shadow-sm">
+                            <div className="bg-muted rounded-2xl rounded-tl-sm border border-border/50 border-l-[3px] border-l-[#4285F4] px-5 py-4 shadow-sm">
                                 <div className="flex items-center gap-1.5">
                                     <span className="w-2 h-2 rounded-full bg-primary/60 animate-bounce [animation-delay:0ms]" />
                                     <span className="w-2 h-2 rounded-full bg-primary/60 animate-bounce [animation-delay:150ms]" />

@@ -143,10 +143,23 @@
 
 /* ── logo dot color cycle ──────────────────────────── */
 @keyframes dot-cycle {
-  0%, 100%  { color: #4285F4; }
-  25%       { color: #EA4335; }
-  50%       { color: #FBBC05; }
-  75%       { color: #34A853; }
+
+  0%,
+  100% {
+    color: #4285F4;
+  }
+
+  25% {
+    color: #EA4335;
+  }
+
+  50% {
+    color: #FBBC05;
+  }
+
+  75% {
+    color: #34A853;
+  }
 }
 
 .logo-dot {
@@ -156,8 +169,13 @@
 
 /* ── CTA shimmer (Google Gemini style) ─────────────── */
 @keyframes google-shimmer {
-  0%   { background-position: -200% center; }
-  100% { background-position: 200% center; }
+  0% {
+    background-position: -200% center;
+  }
+
+  100% {
+    background-position: 200% center;
+  }
 }
 
 .google-shimmer {
@@ -169,14 +187,12 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.08) 20%,
-    rgba(255, 255, 255, 0.22) 40%,
-    rgba(255, 255, 255, 0.08) 60%,
-    transparent 100%
-  );
+  background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.08) 20%,
+      rgba(255, 255, 255, 0.22) 40%,
+      rgba(255, 255, 255, 0.08) 60%,
+      transparent 100%);
   background-size: 200% 100%;
   animation: google-shimmer 3s ease-in-out infinite;
   pointer-events: none;
@@ -193,14 +209,12 @@
   position: absolute;
   inset: -3px;
   border-radius: 50%;
-  background: conic-gradient(
-    from 0deg,
-    #4285F4,
-    #34A853,
-    #FBBC05,
-    #EA4335,
-    #4285F4
-  );
+  background: conic-gradient(from 0deg,
+      #4285F4,
+      #34A853,
+      #FBBC05,
+      #EA4335,
+      #4285F4);
   opacity: 0;
   filter: blur(6px);
   transition: opacity 0.3s ease;
@@ -216,6 +230,33 @@
 *::before,
 *::after {
   transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.site-nav-glass {
+  background-color: color-mix(in srgb, var(--background) 86%, transparent);
+  background-image: linear-gradient(180deg,
+      color-mix(in srgb, var(--card) 92%, transparent) 0%,
+      color-mix(in srgb, var(--background) 82%, transparent) 100%);
+}
+
+.mobile-nav-backdrop {
+  background: color-mix(in srgb, #050505 48%, transparent);
+}
+
+.mobile-nav-panel {
+  background-color: var(--card);
+  background-image: linear-gradient(180deg,
+      var(--card) 0%,
+      var(--background) 100%);
+  box-shadow: -18px 0 42px rgba(5, 5, 5, 0.16);
+}
+
+.dark .mobile-nav-panel {
+  background-color: var(--card);
+  background-image: linear-gradient(180deg,
+      var(--card) 0%,
+      var(--background) 100%);
+  box-shadow: -18px 0 42px rgba(0, 0, 0, 0.45);
 }
 
 /* ── skeleton shimmer ──────────────────────────────── */

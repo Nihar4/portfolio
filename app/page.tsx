@@ -41,7 +41,7 @@ const NAV_SECTIONS = [
   { id: "chat", label: "AI Chat" },
 ] as const;
 
-const TYPED_WORDS = ["distributed systems", "cloud platforms", "full-stack products", "scalable APIs"];
+const TYPED_WORDS = ["distributed systems", "cloud platforms", "multi-agent systems", "LLM pipelines"];
 const TYPED_SPEED = 80;
 const TYPED_DELETE_SPEED = 40;
 const TYPED_PAUSE = 1800;
@@ -506,6 +506,7 @@ export default function Home() {
 
   const projectOrder = [
     "real-time-news-analysis-and-alert-platform",
+    "multi-agent-university-query-orchestration-system",
     "distributed-job-orchestration-platform",
     "portfoliox-mobile-app",
     "realtime-stock-watchlist-android",
@@ -706,7 +707,7 @@ export default function Home() {
           <div className="bg-mesh__noise" />
           <div className="bg-mesh__vignette" />
         </div>
-        <nav className="sticky top-0 z-50 border-b border-border/40 bg-background/70 backdrop-blur-xl">
+        <nav className="site-nav-glass sticky top-0 z-50 border-b border-border/40 backdrop-blur-xl">
           <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
             <span className="font-bold text-lg tracking-tight select-none">NP<span className="logo-dot">.</span></span>
             <div className="flex items-center gap-2">
@@ -808,7 +809,7 @@ export default function Home() {
       </motion.div>
 
       {/* ── sticky navbar ──────────────────────────── */}
-      <nav className="sticky top-0 z-50 border-b border-border/40 bg-background/70 backdrop-blur-xl">
+      <nav className="site-nav-glass sticky top-0 z-50 border-b border-border/40 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
           <Link href="/" className="font-bold text-lg tracking-tight select-none">
             NP<span className="logo-dot">.</span>
@@ -876,7 +877,7 @@ export default function Home() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="md:hidden fixed inset-0 top-14 z-40 bg-black/40 backdrop-blur-sm"
+                className="mobile-nav-backdrop md:hidden fixed inset-0 top-14 z-40 backdrop-blur-sm"
                 onClick={() => setMobileNavOpen(false)}
               />
               {/* slide-in sheet */}
@@ -885,22 +886,39 @@ export default function Home() {
                 animate={{ x: 0 }}
                 exit={{ x: "100%" }}
                 transition={{ type: "spring", stiffness: 350, damping: 35 }}
-                className="md:hidden fixed top-14 right-0 bottom-0 z-50 w-64 bg-background/95 backdrop-blur-xl border-l border-border/40 shadow-2xl"
+                className="md:hidden fixed top-14 right-0 bottom-0 z-50 w-72 shadow-2xl flex flex-col"
+                style={{ backgroundColor: "var(--card)", borderLeft: "1px solid var(--border)" }}
               >
-                <div className="px-6 py-6 flex flex-col gap-1">
-                  {NAV_SECTIONS.map((s) => (
-                    <a
+                {/* header */}
+                <div className="px-6 pt-6 pb-4" style={{ borderBottom: "1px solid var(--border)" }}>
+                  <p className="text-[10px] font-mono uppercase tracking-widest" style={{ color: "var(--muted-foreground)" }}>Navigation</p>
+                </div>
+
+                {/* nav links */}
+                <div className="px-4 py-4 flex flex-col gap-1 flex-1" style={{ backgroundColor: "var(--card)" }}>
+                  {NAV_SECTIONS.map((s, i) => (
+                    <motion.a
                       key={s.id}
                       href={`#${s.id}`}
                       onClick={() => setMobileNavOpen(false)}
-                      className={`px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.06, duration: 0.3 }}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
                         activeSection === s.id
                           ? "text-primary bg-primary/10"
-                          : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted/60 hover:translate-x-1"
                       }`}
                     >
+                      <span
+                        className="shrink-0 w-[3px] h-4 rounded-full"
+                        style={{
+                          backgroundColor: activeSection === s.id ? "var(--primary)" : G_COLORS[i % G_COLORS.length],
+                          opacity: activeSection === s.id ? 1 : 0.45,
+                        }}
+                      />
                       {s.label}
-                    </a>
+                    </motion.a>
                   ))}
                 </div>
               </motion.div>

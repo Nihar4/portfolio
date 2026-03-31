@@ -4,7 +4,7 @@
   "profile": {
     "id": "nihar-patel",
     "name": "Nihar Patel",
-    "headline": "Software engineer specializing in distributed systems, cloud infrastructure, and high-throughput backend services.",
+"headline": "Software engineer specializing in distributed systems, cloud-native backend services, and LLM-powered multi-agent systems.",
     "location": "San Jose, CA",
     "phone": "+1 (408) 207-5620",
     "email": "niharpatel718@gmail.com",
@@ -13,8 +13,7 @@
       "github": "https://github.com/Nihar4",
       "resumePdf": "/resume.pdf"
     },
-    "bio": "I design and ship production-grade distributed systems, data pipelines, and cloud-native services with a focus on reliability, low latency, and clean abstractions. My work spans backend infrastructure (Go, Java, C++), cloud platforms (GCP, AWS, Kubernetes), and end-to-end product delivery with React and Next.js."
-  },
+"bio": "I design and ship production-grade distributed systems, data pipelines, and AI-powered backend services with a focus on reliability, low latency, and clean abstractions. My work spans backend infrastructure (Go, Java, C++), cloud platforms (GCP, AWS, Kubernetes), multi-agent orchestration (LangGraph, RAG pipelines, Text-to-SQL), and end-to-end product delivery with React and Next.js."  },
   "projects": [
     {
       "id": "real-time-news-analysis-and-alert-platform",
@@ -52,6 +51,47 @@
       "details": "A production-grade streaming platform that ingests news at scale, enriches it with LLMs, semantically deduplicates content, and triggers personalized user alerts in near real time."
     },
 
+    {
+  "id": "multi-agent-university-query-orchestration-system",
+  "slug": "multi-agent-university-query-orchestration-system",
+  "title": "Multi-Agent University Query Orchestration System",
+  "summary": "LLM-powered multi-agent system that classifies, routes, and resolves student queries across university departments using specialized RAG agents and a human verification layer.",
+  "tags": [
+    "multi-agent",
+    "llm",
+    "rag",
+    "text-to-sql",
+    "orchestration",
+    "pgvector",
+    "langraph",
+    "fastapi",
+    "aws"
+  ],
+  "techStack": [
+    "Python",
+    "LangGraph",
+    "FastAPI",
+    "PostgreSQL",
+    "pgvector",
+    "Redis",
+    "Docker",
+    "AWS",
+    "React"
+  ],
+  "links": {
+    "repo": "https://github.com/Nihar4/"
+  },
+  "highlights": [
+    "Built an LLM orchestrator that classifies student queries, splits multi-department requests into parallel sub-queries, and routes each to specialized RAG agents with dedicated pgvector stores.",
+    "Implemented confidence scoring to flag uncertain answers for human review, reducing hallucinations by 85%.",
+    "Developed aggregator agent that merges multi-department answers into a single coherent student-facing reply."
+  ],
+  "metrics": {
+    "departmentsSupported": 6,
+    "hallucinationReductionPercent": 85
+  },
+  "details": "A multi-agent orchestration system where a central router agent decomposes complex student queries, delegates to department-specific RAG agents each with isolated knowledge bases, and aggregates responses through a human-in-the-loop verification layer before delivery."
+},
      {
       "id": "distributed-job-orchestration-platform",
       "slug": "distributed-job-orchestration-platform",
@@ -226,52 +266,55 @@
     }
   ],
   "experience": [
-     {
-      "id": "greatbear-swe-2024-2025",
-      "company": "GreatBear",
-      "role": "Software Engineer",
-      "location": "Ahmedabad, India",
-      "date": { "start": "2024-07-01", "end": "2025-06-30" },
-      "summary": "Architected distributed Java microservices and C++ forecasting services for an investment platform on GCP, cutting deployment time by 60% and saving $2,400/mo.",
-      "tags": ["distributed-systems", "gcp", "microservices", "graphql", "cloud-pubsub", "terraform", "kubernetes", "observability"],
-      "techStack": [
-        "Java",
-        "C++",
-        "Go",
-        "TypeScript",
-        "SQL",
-        "Spring Boot",
-        "React",
-        "MySQL",
-        "GraphQL",
-        "Docker",
-        "Kubernetes",
-        "GCP",
-        "GKE",
-        "Cloud Pub/Sub",
-        "Cloud Functions",
-        "Cloud Scheduler",
-        "Cloud Monitoring",
-        "Terraform",
-        "CI/CD",
-        "Chart.js"
-      ],
-      "highlights": [
-        "Architected a distributed Java microservices backend for an investment platform using GraphQL APIs, supporting 1,000+ daily active sessions across portfolio and fund analytics workflows.",
-        "Built a multithreaded C++ stock price forecasting service running 1,000,000+ Monte Carlo iterations per run, consuming jobs via Cloud Pub/Sub and persisting forecasts to MySQL.",
-        "Migrated 15+ legacy cron-based workloads from dedicated servers to serverless Go Cloud Functions triggered by GCP Cloud Scheduler, reducing monthly infrastructure costs by $2,400.",
-        "Developed a responsive React/TypeScript dashboard with interactive Chart.js visualizations and real-time data tables.",
-        "Automated 10+ GCP services (Cloud Storage, Cloud Pub/Sub, Cloud Monitoring, etc.) via Terraform and delivered containerized services with Docker, Kubernetes (GKE), and CI/CD pipelines, cutting deployment time by 60%.",
-        "Collaborated cross-functionally to author design docs and ship reliable distributed services, owning unit and integration testing, production monitoring, and on-call debugging to sustain high service uptime."
-      ],
-      "metrics": {
-        "dailyActiveSessions": 1000,
-        "monthlyInfraSavingsUsd": 2400,
-        "cronWorkloadsMigrated": 15,
-        "deploymentTimeReductionPercent": 60,
-        "monteCarloIterationsPerRun": 1000000
-      }
-    },
+    {
+  "id": "greatbear-swe-2024-2025",
+  "company": "GreatBear",
+  "role": "Software Engineer",
+  "location": "Ahmedabad, India",
+  "date": { "start": "2024-07-01", "end": "2025-06-30" },
+  "summary": "Architected distributed Java microservices, LLM-powered fund intelligence engine, and C++ forecasting services for an investment platform on GCP, cutting deployment time by 60% and saving $2,400/mo.",
+  "tags": ["distributed-systems", "gcp", "microservices", "graphql", "llm", "text-to-sql", "cloud-pubsub", "terraform", "kubernetes", "observability"],
+  "techStack": [
+    "Java",
+    "C++",
+    "Go",
+    "TypeScript",
+    "SQL",
+    "Spring Boot",
+    "React",
+    "MySQL",
+    "GraphQL",
+    "Docker",
+    "Kubernetes",
+    "GCP",
+    "GKE",
+    "Cloud Pub/Sub",
+    "Cloud Functions",
+    "Cloud Scheduler",
+    "Cloud Monitoring",
+    "Terraform",
+    "CI/CD",
+    "Chart.js",
+    "LLM",
+    "Text-to-SQL"
+  ],
+  "highlights": [
+    "Architected a distributed Java microservices backend for an investment platform using GraphQL APIs, supporting 1,000+ daily active sessions across portfolio and fund analytics workflows.",
+    "Built an LLM-powered fund intelligence engine that parsed natural language investor queries, dynamically generated SQL via a Text-to-SQL pipeline, and synthesized structured fund insights, cutting manual research time by 70%.",
+    "Built a multithreaded C++ stock price forecasting service running 1,000,000+ Monte Carlo iterations per run, consuming jobs via Cloud Pub/Sub and persisting forecasts to MySQL.",
+    "Migrated 15+ legacy cron-based workloads to serverless Go Cloud Functions triggered by GCP Cloud Scheduler, reducing monthly infrastructure costs by $2,400.",
+    "Developed a responsive React/TypeScript dashboard with interactive Chart.js visualizations and real-time data tables.",
+    "Automated 10+ GCP services via Terraform and delivered containerized services with Docker, Kubernetes (GKE), and CI/CD pipelines, cutting deployment time by 60%."
+  ],
+  "metrics": {
+    "dailyActiveSessions": 1000,
+    "monthlyInfraSavingsUsd": 2400,
+    "cronWorkloadsMigrated": 15,
+    "deploymentTimeReductionPercent": 60,
+    "monteCarloIterationsPerRun": 1000000,
+    "manualResearchTimeReductionPercent": 70
+  }
+},
     {
       "id": "greatbear-intern-2024",
       "company": "GreatBear",
@@ -349,8 +392,12 @@
   ],
 
   "mlAndAi": [
-    "PyTorch", "scikit-learn", "HuggingFace",
-    "RAG pipelines", "LLM enrichment"
+    "LangGraph", "LangChain",
+    "Multi-Agent Orchestration",
+    "RAG Pipelines", "Text-to-SQL",
+    "LLM Enrichment",
+    "pgvector",
+    "HuggingFace", "PyTorch", "scikit-learn"
   ],
 
   "systems": [

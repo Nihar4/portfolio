@@ -508,6 +508,7 @@ export default function Home() {
     "real-time-news-analysis-and-alert-platform",
     "multi-agent-university-query-orchestration-system",
     "distributed-job-orchestration-platform",
+    "mini-bigquery-analytics-warehouse",
     "portfoliox-mobile-app",
     "realtime-stock-watchlist-android",
     "coursebundler",

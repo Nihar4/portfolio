@@ -137,6 +137,53 @@
     },
 
     {
+      "id": "mini-bigquery-analytics-warehouse",
+      "slug": "mini-bigquery-analytics-warehouse",
+      "title": "Mini BigQuery — Local Analytics Warehouse",
+      "summary": "End-to-end data engineering project that replicates core BigQuery concepts locally: raw CSV ingestion → partitioned Parquet storage → DuckDB SQL analytics → custom parallel MapReduce engine with Map/Shuffle/Reduce phase transparency. Processes 165,474 e-commerce events across 135 date partitions.",
+      "tags": [
+        "data-engineering",
+        "mapreduce",
+        "duckdb",
+        "parquet",
+        "etl",
+        "analytics",
+        "python",
+        "warehouse",
+        "olap",
+        "parallel-computing"
+      ],
+      "techStack": [
+        "Python 3.9+",
+        "DuckDB",
+        "Apache Parquet",
+        "MapReduce (ThreadPoolExecutor)",
+        "pandas",
+        "PyArrow",
+        "matplotlib",
+        "SQL"
+      ],
+      "links": {
+        "repo": "https://github.com/Nihar4/Mini-Analytics-Warehouse"
+      },
+      "highlights": [
+        "Built custom MapReduce engine from scratch with Map→Shuffle→Reduce phases, saving intermediate outputs (map_output.csv, shuffle_output.csv, reduce_output.csv) per job for full pipeline observability",
+        "Ingested 165,474 e-commerce events, applied schema normalization, and wrote hive-partitioned Parquet (135 date partitions) enabling predicate pushdown queries without loading full dataset",
+        "Implemented 7 parallel analytics jobs (event_count_by_type, country_event_count, revenue_by_category, etc.) with results loaded into DuckDB — supports --compare flag to benchmark MapReduce vs SQL execution",
+        "Designed end-to-end warehouse pipeline: ETL → Parquet → DuckDB aggregate tables → 9 parameterized SQL queries → matplotlib charts — all reproducible via CLI with no notebook dependencies"
+      ],
+      "metrics": {
+        "events_processed": 165474,
+        "parquet_partitions": 135,
+        "mapreduce_jobs": 7,
+        "sql_queries": 9,
+        "countries_analyzed": 47,
+        "product_categories": 4
+      },
+      "details": "Modeled after Google BigQuery's architecture: columnar Parquet storage (like BigQuery's Capacitor format), a query engine that pushes computation to partitions (DuckDB), and a distributed processing layer (custom MapReduce). The MapReduce engine uses Python's ThreadPoolExecutor to parallelize the Map phase across data chunks, then merges in the Shuffle phase, and applies user-defined reduce functions. Unlike toy examples, each job saves intermediate phase outputs as CSVs so the full data flow is observable and debuggable. Final reduced results are loaded into a dedicated DuckDB file (mr_results.duckdb) for SQL querying on top of MapReduce outputs."
+    },
+
+    {
       "id": "coursebundler",
       "slug": "coursebundler",
       "title": "CourseBundler",
